@@ -18,5 +18,10 @@
 
     {{-- page scripts --}}
     @yield('scripts')
+
+    {{-- alerts --}}
+    @include('components.pop-error')
+    @include('components.modal-pop')
+    @include('components.alert')
 </body>
 </html>

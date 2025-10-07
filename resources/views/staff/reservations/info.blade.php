@@ -12,8 +12,19 @@
                     Reservations Info
                 </div>
 
-                <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold basis-full">
-                    Reservation Details: 
+                <div class="bg-white rounded-xl p-4 h-full basis-full">
+                    Reservation ID: 00<br>
+                    Guest: Test<br>
+                    Check in: 99/00/000<br>
+                    Check out: 99/00/000<br>
+                    Status: Status<br>
+                    Room Number: 00<br>
+                    Room Type: Test<br>
+                    Room Price: 000.00<br>
+                </div>
+
+                <div class="bg-white rounded-xl p-4 basis-auto">
+                    Buttons
                 </div>
             </div>
         </div>

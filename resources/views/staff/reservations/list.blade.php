@@ -12,8 +12,35 @@
                     Reservations
                 </div>
 
-                <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold basis-full">
-                    List of Reservations: 00
+                <div class="bg-white rounded-xl p-4 h-full basis-full overflow-auto">
+                    <table class="min-w-full table-auto">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2 bg-gray-300 rounded-s-xl">ID</th>
+                                <th class="px-4 py-2 bg-gray-300">Guest</th>
+                                <th class="px-4 py-2 bg-gray-300">Check in</th>
+                                <th class="px-4 py-2 bg-gray-300">Check out</th>
+                                <th class="px-4 py-2 bg-gray-300">Status</th>
+                                <th class="px-4 py-2 bg-gray-300 rounded-e-xl">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for ($i = 0; $i < 20; $i++)
+                                <tr class="hover:bg-gray-300 border-b border-gray-200">
+                                    <td class="px-4 py-2">{{ $i }}</td>
+                                    <td class="px-4 py-2 text-center truncate">Test</td>
+                                    <td class="px-4 py-2 text-center">99/00/000</td>
+                                    <td class="px-4 py-2 text-center">99/00/000</td>
+                                    <td class="px-4 py-2 text-center">Status</td>
+                                    <td class="px-4 py-2 w-1/6 text-center">
+                                        <a href="{{ url('/reservations/details/') }}"
+                                            class="text-gray-500 hover:underline">Show Details</a>
+                                    </td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                    {{-- List of Reservations: 00 --}}
                 </div>
 
                 <div class="bg-white rounded-xl p-4 basis-auto">

@@ -5,14 +5,14 @@
         <div class="container p-4 mx-auto flex flex-col gap-4">
             {{-- top bar --}}
             <div class="bg-white rounded-xl p-4 h-full basis-full">
-                <a href="{{ url('/home') }}" class="flex justify-center items-center gap-4">
+                <a href="{{ url('/home') }}" class="flex items-center gap-4">
                     <h1 class="text-2xl font-bold">
                         Hotel Reservation System!
                     </h1>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl p-4 h-full basis-full grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl p-4 h-full basis-full grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {{-- room list --}}
                 @for ($i = 0; $i <= 10; $i++)
                     @include('components.room-cards', [
@@ -20,6 +20,7 @@
                         'roomType' => 'Single',
                         'roomPrice' => '100.00',
                         'status' => 'Available',
+                        'isGuest' => true,
                     ])
                 @endfor
             </div>
