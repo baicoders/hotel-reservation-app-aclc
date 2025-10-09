@@ -17,7 +17,7 @@
                         Img
                     </div>
 
-                    <form action="{{ url('/rooms/update/' . $room->id) }}" method="post" class="bg-white rounded-b-xl p-4 basis-auto">
+                    <form action="{{ url('/rooms/update/' . $room->id) }}" id="editRoomForm" method="post" class="bg-white rounded-b-xl p-4 basis-auto">
                         @csrf
                         <div class="grid grid-cols-2 gap-2">
                             <div class="flex flex-col gap-1">
@@ -48,9 +48,12 @@
                 </div>
 
                 <div class="flex flex-row gap-4 basis-auto">
-                    <a href="{{ url('/rooms/update') }}" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full">
+                    <button type="submit" form="editRoomForm" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full text-center">
                         Update Room
-                    </a>
+                    </button>
+                    {{-- <a href="{{ url('/rooms/update') }}" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full">
+                        Update Room
+                    </a> --}}
                 </div>
             </div>
         </div>

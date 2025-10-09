@@ -25,8 +25,8 @@
                 </div>
 
                 <div class="flex flex-row gap-4 basis-auto">
-                    <form action="{{ url('/rooms/delete/' . $room->id) }}" method="POST"
-                        onsubmit="return handleFormSubmission(event,'Are you sure you want to delete this Room?','Alert!','book_delete_form');">
+                    <form action="{{ url('/rooms/delete/' . $room->id) }}" id="room_delete_form" method="POST"
+                        onsubmit="return handleFormSubmission(event,'Are you sure you want to delete this Room?','Alert!','room_delete_form');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="bg-gray-100 border-red-400 border hover:bg-gray-200 rounded-xl p-4 basis-auto whitespace-nowrap">Delete

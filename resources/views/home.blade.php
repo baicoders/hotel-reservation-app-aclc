@@ -11,10 +11,10 @@
                     </h1>
                 </div>
                 <div class="flex flex-col gap-4 full">
-                    <a href="{{ url('/reserve-room') }}" class="bg-white rounded-xl p-4 h-full basis-full text-2xl font-bold text-center flex justify-center items-center">
+                    <a href="{{ url('/search-room') }}" class="bg-white rounded-xl p-4 h-full basis-full text-2xl font-bold text-center flex justify-center items-center">
                         Reserve Room
                     </a>
-                    <a href="{{ url('/manage') }}" class="bg-white rounded-xl p-4 h-full basis-full text-2xl font-bold text-center flex justify-center items-center">
+                    <a href="{{ url('/dashboard') }}" class="bg-white rounded-xl p-4 h-full basis-full text-2xl font-bold text-center flex justify-center items-center">
                         Manage
                     </a>
                 </div>

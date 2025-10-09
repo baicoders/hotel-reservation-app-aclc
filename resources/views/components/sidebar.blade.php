@@ -6,6 +6,7 @@
             </h1>
         </a>
     </div>
+    <a href="{{ url('/dashboard') }}" class="bg-white rounded-xl p-4 basis-auto">Dashboard</a>
     <a href="{{ url('/reservations') }}" class="bg-white rounded-xl p-4 basis-auto">Reservations</a>
     <a href="{{ url('/guest') }}" class="bg-white rounded-xl p-4 basis-auto">Guests</a>
     <a href="{{ url('/rooms') }}" class="bg-white rounded-xl p-4 basis-auto">Rooms</a>

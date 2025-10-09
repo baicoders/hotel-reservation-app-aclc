@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Guest;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
 
 class GuestController extends Controller
@@ -13,8 +14,8 @@ class GuestController extends Controller
     public function index()
     {
         //
-        $guests = Guest::all();
-        // return view('guests.index', compact('guests'));
+        $guests = Guest::latest()->take(50)->get();
+        return view('staff.guest.list', compact('guests'));
     }
 
     /**
@@ -36,9 +37,19 @@ class GuestController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Guest $guest)
+    public function show(string $guest_id)
     {
         //
+        $guest = Guest::findOrFail($guest_id);
+        // show the list of reservations made by the guest
+        $bookings = Reservation::join('guests', 'reservations.guest_id', '=', 'guests.id')
+            ->join('rooms', 'reservations.room_id', '=', 'rooms.id')
+            ->where('reservations.guest_id', $guest->id)
+            ->select('reservations.*', 'guests.*', 'rooms.*')
+            ->get();
+        //
+        // dd($bookings->toArray());
+        return view('staff.guest.info', compact('guest', 'bookings'));
     }
 
     /**

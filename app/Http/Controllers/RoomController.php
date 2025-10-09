@@ -14,9 +14,17 @@ class RoomController extends Controller
     {
         //
         $rooms = Room::limit(10)->latest()->get();
-
         return view('staff.rooms.list', compact('rooms'));
     }
+
+    // list of room to reserve for the guest
+    public function listRooms()
+    {
+        //
+        $rooms = Room::where('status', 'available')->latest()->get();
+        return view('guest.search-rooms', compact('rooms'));
+    }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -60,6 +68,14 @@ class RoomController extends Controller
         return view('staff.rooms.info', compact('room'));
     }
 
+    // show the details of the room to reserve for the guest
+    public function reserveRoom(string $room_id)
+    {
+        //
+        $room = Room::where('id', $room_id)->firstOrFail();
+        return view('guest.room-details', compact('room'));
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -84,14 +100,14 @@ class RoomController extends Controller
 
         // Validate the incoming request data
         $validatedData = $request->validate([
-            'roomNumber' => 'required|string|max:13|unique:rooms,rm_number,' . $room->rm_number,
+            // 'roomNumber' => 'required|string|max:13|unique:rooms,rm_number,' . $room->rm_number,
             'roomType' => 'required|string|max:255',
             'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
             'status' => 'nullable|string|max:128',
         ]);
 
         $room->update([
-            'rm_number' => $validatedData['roomNumber'],
+            // 'rm_number' => $validatedData['roomNumber'],
             'rm_type' => $validatedData['roomType'],
             'rm_price_per_night' => $validatedData['roomPrice'],
             'status' => $validatedData['status'] ?? 'available',

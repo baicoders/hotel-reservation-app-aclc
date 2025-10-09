@@ -14,15 +14,16 @@
 
             <div class="bg-white rounded-xl p-4 h-full basis-full grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {{-- room list --}}
-                @for ($i = 0; $i <= 10; $i++)
+                @foreach ($rooms as $room)
                     @include('components.room-cards', [
-                        'roomNumber' => '0' . $i,
-                        'roomType' => 'Single',
-                        'roomPrice' => '100.00',
-                        'status' => 'Available',
+                        'roomNumber' => $room->rm_number,
+                        'roomType' => $room->rm_type,
+                        'roomPrice' => $room->rm_price_per_night,
+                        'status' => $room->status,
+                        'room_id' => $room->id,
                         'isGuest' => true,
                     ])
-                @endfor
+                @endforeach
             </div>
 
             {{-- footer --}}
