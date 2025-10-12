@@ -40,7 +40,7 @@
                 </div>
 
                 <div class="flex flex-row gap-4 basis-auto">
-                    <form action="{{ url('/guests/delete/' . $guest->id) }}" id="guest_delete_form" method="POST"
+                    <form action="{{ url('/guest/delete/' . $guest->id) }}" id="guest_delete_form" method="POST"
                         onsubmit="return handleFormSubmission(event,'Are you sure you want to delete this Guest?','Alert!','guest_delete_form');">
                         @csrf
                         @method('DELETE')

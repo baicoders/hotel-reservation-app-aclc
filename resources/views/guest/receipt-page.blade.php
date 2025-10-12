@@ -21,6 +21,7 @@
                     <h2 class="text-xl font-bold col-span-2">Receipt</h2>
                     <p>Thank you, {{ $guest->name }}, for your reservation!</p>
                     <p>A confirmation email has been sent to {{ $guest->email }}.</p>
+                    <p class="text-gray-500">Note! the email confirmation is in development it will not send a confirmation email.</p>
                     <br>
                     <h3 class="text-lg font-semibold">Reservation Details:</h3>
                     <p>Room Number: {{ $room->rm_number }}</p>

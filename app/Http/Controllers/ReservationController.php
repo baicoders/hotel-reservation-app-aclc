@@ -94,7 +94,7 @@ class ReservationController extends Controller
             'guest_id' => $existingGuest->id,
             'check_in_date' => now(),
             'check_out_date' => now()->addDays(1), // assuming 1 day
-            'status' => 'Reserved',
+            'status' => 'confirmed',
         ]);
         Payment::create([
             'reservation_id' => Reservation::latest()->first()->id,

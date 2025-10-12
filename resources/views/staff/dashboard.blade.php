@@ -9,16 +9,43 @@
             {{-- content --}}
             <div class="grid grid-cols-2 gap-4 grid-rows-2 h-full basis-full">
                 <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold">
-                    Payments: 00
+                    Latest Activities
                 </div>
-                <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold">
-                    Reservations: 00
+                <div class="bg-white rounded-xl p-4 h-full flex flex-col gap-2 text-2xl font-bold">
+                    Reservations: {{ $latestReservations->count() }}
+                    <div class="text-gray-500">
+                        <ul class="list-disc ml-4 text-base">
+                            @foreach($latestReservations as $reservation)
+                                <li>
+                                    {{ $reservation->guest_name }} - Room {{ $reservation->room_id }} ({{ $reservation->check_in_date }} to {{ $reservation->check_out_date }})
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
-                <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold">
-                    Guests: 00
+                <div class="bg-white rounded-xl p-4 h-full flex  flex-col gap-2 text-2xl font-bold">
+                    Guests: {{ $latestGuests->count() }}
+                    <div class="text-gray-500">
+                        <ul class="list-disc ml-4 text-base">
+                            @foreach($latestGuests as $guest)
+                                <li>
+                                    {{ $guest->full_name }} ({{ $guest->email }})
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
-                <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold">
-                    Rooms: 00
+                <div class="bg-white rounded-xl p-4 h-full flex flex-col gap-2 text-2xl font-bold">
+                    Rooms: {{ $latestRooms->count() }}
+                    <div class="text-gray-500">
+                        <ul class="list-disc ml-4 text-base">
+                            @foreach($latestRooms as $room)
+                                <li>
+                                    Room {{ $room->rm_number }} - {{ $room->rm_type }} ({{ $room->status }})
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

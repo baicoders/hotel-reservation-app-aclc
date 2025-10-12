@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class RoomController extends Controller
 {
@@ -13,7 +16,9 @@ class RoomController extends Controller
     public function index()
     {
         //
-        $rooms = Room::limit(10)->latest()->get();
+        // $rooms = Room::limit(10)->leftJoin('rooms_photos', 'rooms.id', '=', 'rooms_photos.room_id')->select('rooms.*', 'rooms_photos.room_id','rooms_photos.photo_path')->latest('rooms.created_at')->distinct('rooms_photos.room_id')->get();
+        $rooms = Room::limit(10)->with('firstPhoto')->latest('created_at')->get();
+        // dd($rooms);
         return view('staff.rooms.list', compact('rooms'));
     }
 
@@ -21,10 +26,24 @@ class RoomController extends Controller
     public function listRooms()
     {
         //
-        $rooms = Room::where('status', 'available')->latest()->get();
+        $rooms = Room::limit(50)->where('status', 'available')->with('firstPhoto')->latest('created_at')->get();
+        // $rooms = Room::where('status', 'available')->with('firstPhoto')->latest('created_at')->get();
+        // dd($rooms);
         return view('guest.search-rooms', compact('rooms'));
     }
-    
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        $rooms = Room::where('rm_number', 'like', '%' . $query . '%')
+            ->with('firstPhoto')
+            ->orWhere('rm_type', 'like', '%' . $query . '%')
+            ->latest()
+            ->get();
+
+        return view('staff.rooms.list', compact('rooms'));
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -48,14 +67,75 @@ class RoomController extends Controller
             'status' => 'nullable|string|max:128',
         ]);
 
-        Room::create([
+        // Remove dd($validatedData);
+
+        $room = Room::create([
             'rm_number' => $validatedData['roomNumber'],
             'rm_type' => $validatedData['roomType'],
             'rm_price_per_night' => $validatedData['roomPrice'],
             'status' => $validatedData['status'] ?? 'available',
         ]);
 
+        // Save room photos
+        if ($request->hasFile('roomPhotos')) {
+            $photos = $request->file('roomPhotos');
+            $uploadResult = false;
+            if (is_array($photos)) {
+                $uploadResult = $this->uploadPhoto($request, $room->id);
+            } else {
+                $uploadResult = $this->uploadSinglePhoto($request, $room->id);
+            }
+            if (!$uploadResult || (method_exists($uploadResult, 'getStatusCode') && $uploadResult->getStatusCode() !== 200)) {
+                return redirect('/rooms')->with('error', 'Photo upload failed!');
+            }
+        }
+
         return redirect('/rooms')->with('success', 'New Room is added!');
+    }
+
+    public function uploadPhoto(Request $request, string $room_id)
+    {
+        $room = Room::where('id', $room_id)->firstOrFail();
+
+        $request->validate([
+            'roomPhotos' => 'required|array',
+            'roomPhotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:4096',
+        ]);
+
+        foreach ($request->file('roomPhotos') as $photo) {
+            $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
+            $path = $photo->storeAs('room-photos', $filename, 'public');
+
+            DB::table('rooms_photos')->insert([
+                'room_id' => $room->id,
+                'photo_path' => $path,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return back()->with('success', 'Photos uploaded successfully!');
+    }
+    public function uploadSinglePhoto(Request $request, string $room_id)
+    {
+        $room = Room::where('id', $room_id)->firstOrFail();
+
+        $request->validate([
+            'roomPhotos' => 'required|image|mimes:jpeg,png,jpg,gif|max:4096',
+        ]);
+
+        $photo = $request->file('photo');
+        $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
+        $path = $photo->storeAs('room-photos', $filename, 'public');
+
+        DB::table('rooms_photos')->insert([
+            'room_id' => $room->id,
+            'photo_path' => $path,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('success', 'Photo uploaded successfully!')->with('photo', $path);
     }
 
     /**
@@ -65,7 +145,17 @@ class RoomController extends Controller
     {
         //
         $room = Room::where('id', $room_id)->firstOrFail();
-        return view('staff.rooms.info', compact('room'));
+
+        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->get();
+        $room->images = $photos;
+
+        $reservations = Reservation::where('room_id', $room_id)
+            ->where('status', 'confirmed')
+            ->join('guests', 'reservations.guest_id', '=', 'guests.id')
+            ->select('reservations.*', 'guests.full_name as guest_name', 'guests.email as guest_email')
+            ->latest('reservations.created_at')
+            ->get();
+        return view('staff.rooms.info', compact('room', 'reservations'));
     }
 
     // show the details of the room to reserve for the guest
@@ -73,7 +163,9 @@ class RoomController extends Controller
     {
         //
         $room = Room::where('id', $room_id)->firstOrFail();
-        return view('guest.room-details', compact('room'));
+        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->get();
+        $room->images = $photos;
+        return view('guest.room-details', compact('room', 'photos'));
     }
 
     /**

@@ -1,7 +1,7 @@
 @extends('layout.app')
 
 @section('content')
-    <div class=" bg-gray-300 ">
+    <div class=" bg-gray-300 h-screen">
         <div class="container p-4 mx-auto flex flex-col gap-4 h-full">
             {{-- top bar --}}
             <div class="bg-white rounded-xl p-4 basis-auto">
@@ -13,10 +13,35 @@
             </div>
 
             {{-- room details --}}
-            <div class="basis-full flex flex-col h-full">
-                <div class="bg-gray-200 rounded-t-xl p-4 h-full basis-full">
-                    Img
+            <div class="basis-full">
+                <div class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth rounded-t-xl h-64">
+                    @if ($room->images && count($room->images))
+                        @foreach ($room->images as $image)
+                            <!-- Carousel Item 1 -->
+                            <div class="shrink-0 w-full h-full snap-start">
+                                <div class="bg-gray-200 h-full flex items-center justify-center text-xl">
+                                    <img src="{{ asset('storage/' . $image->photo_path) }}"
+                                        class="block w-full h-full object-cover" alt="..." />
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="bg-gray-200 h-full flex items-center justify-center text-xl text-gray-500 w-full">
+                            No images uploaded for this room.
+                        </div>
+                    @endif
+
                 </div>
+                {{-- <div class="bg-gray-200 rounded-t-xl p-4 h-full basis-full">
+                    <div class="grid grid-cols-3 gap-4">
+                        @foreach ($photos as $photo)
+                            <div class="bg-white rounded-xl overflow-hidden">
+                                <img src="{{ asset('storage/room_photos/' . $photo->photo_path) }}" alt="Room Photo"
+                                    class="w-full h-48 object-cover">
+                            </div>
+                        @endforeach
+                    </div>
+                </div> --}}
                 <div class="bg-white rounded-b-xl p-4 basis-auto">
                     Room Number: {{ $room->rm_number }}<br>
                     Room Type: {{ $room->rm_type }}<br>

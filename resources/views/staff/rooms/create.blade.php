@@ -20,6 +20,13 @@
                     <form action="{{ url('/rooms/record') }}" id="createRoomForm" method="post" class="bg-white rounded-b-xl p-4 basis-auto" enctype="multipart/form-data">
                         @csrf
                         <div class="grid grid-cols-2 gap-2">
+                            {{-- input for adding room photos --}}
+                            <div class="flex flex-col gap-1 col-span-full">
+                                <label for="roomPhotos" class="font-bold">Room Photos</label>
+                                <input type="file" id="roomPhotos" name="roomPhotos[]" multiple accept="image/*"
+                                    class="border border-gray-300 rounded-xl p-2 w-full" />
+                            </div>
+
                             <div class="flex flex-col gap-1">
                                 <label for="roomNumber" class="font-bold">Room Number</label>
                                 <input type="number" id="roomNumber" name="roomNumber" value="00"

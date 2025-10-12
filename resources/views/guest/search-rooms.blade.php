@@ -22,6 +22,7 @@
                         'status' => $room->status,
                         'room_id' => $room->id,
                         'isGuest' => true,
+                        'photo_path' => $room->firstPhoto->photo_path ?? '',
                     ])
                 @endforeach
             </div>

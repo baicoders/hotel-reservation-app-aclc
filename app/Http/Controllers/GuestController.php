@@ -71,8 +71,16 @@ class GuestController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Guest $guest)
+    public function destroy(string $guest_id)
     {
         //
+        // Delete all reservations associated with the guest
+        // Reservation::where('guest_id', $guest_id)->delete();
+
+        // Delete the guest record
+        Guest::destroy($guest_id);
+
+        // Redirect back with a success message
+        return redirect('/guest')->with('success', 'Guest and related reservations deleted successfully.');
     }
 }
