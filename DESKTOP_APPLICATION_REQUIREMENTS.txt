@@ -1,0 +1,781 @@
+HOTEL RESERVATION SYSTEM
+DESKTOP APPLICATION IMPLEMENTATION REQUIREMENTS
+================================================
+
+Purpose
+-------
+This document translates the current Laravel web application into a
+framework-neutral plan for creating an equivalent desktop application.
+It identifies the software components, screens, database, workflows, rules,
+security controls, packaging needs, and testing work required to reproduce
+the documented system in a desktop framework such as:
+
+- C#/.NET with WPF or WinUI
+- Java with JavaFX
+- Python with PySide/PyQt
+- Electron with a local service/database
+- Tauri with a Rust backend and desktop web UI
+
+The implementation should preserve the existing hotel reservation behavior
+unless a requirement below explicitly recommends correcting a documented
+limitation.
+
+
+1. RECOMMENDED DESKTOP ARCHITECTURE
+-----------------------------------
+
+Use a layered desktop architecture:
+
+1. Presentation layer
+   - Windows, pages, dialogs, navigation shell, forms, tables, cards, and
+     notifications.
+   - Handles user interaction and display state only.
+
+2. Application/service layer
+   - Authentication service.
+   - Room service.
+   - Guest service.
+   - Reservation service.
+   - Payment service.
+   - Dashboard/reporting service.
+   - Coordinates validation, transactions, and screen data.
+
+3. Domain/model layer
+   - User, Room, RoomPhoto, Guest, Reservation, Payment, and Amenity models.
+   - Enumerations for room status, reservation status, payment status, and
+     payment method.
+   - Domain validation and relationships.
+
+4. Data access layer
+   - Repository or data-access classes for SQLite or another selected
+     database.
+   - Parameterized queries or a desktop ORM.
+   - Migration/versioning support.
+
+5. Infrastructure layer
+   - Password hashing.
+   - File storage for room images.
+   - Logging.
+   - Configuration.
+   - Backup and restore.
+   - Application update/packaging support.
+
+For a single-computer installation, a local SQLite database is the simplest
+replacement for the Laravel database. For multiple staff computers, use a
+central PostgreSQL/MySQL/SQL Server database and expose the application
+through a secured service/API instead of allowing direct shared-file access.
+
+
+2. REQUIRED DEVELOPMENT TOOLS
+-----------------------------
+
+Select one desktop stack:
+
+Option A - C#:
+- .NET 8 or later.
+- WPF or WinUI 3.
+- Entity Framework Core or Dapper.
+- SQLite for local mode.
+- xUnit/NUnit for tests.
+- MSIX, WiX, or an equivalent installer.
+
+Option B - Java:
+- Java 21 or later.
+- JavaFX.
+- SQLite JDBC or Hibernate/JPA.
+- JUnit.
+- jpackage or an installer generator.
+
+Option C - Python:
+- Python 3.12 or later.
+- PySide6 or PyQt6.
+- SQLAlchemy or sqlite3.
+- pytest.
+- PyInstaller or Briefcase.
+
+Option D - Electron/Tauri:
+- Desktop shell and navigation UI.
+- Local backend process or Rust/Node database layer.
+- SQLite driver.
+- Secure IPC between UI and backend.
+- Electron Builder, MSIX, or Tauri bundling.
+
+Common tools regardless of framework:
+- Git.
+- IDE/editor for the selected framework.
+- Database browser for SQLite.
+- Image preview and file validation support.
+- Code formatter and static analyzer.
+- CI pipeline for build and test validation.
+
+
+3. DESKTOP APPLICATION MODULES
+------------------------------
+
+The application should contain these modules:
+
+3.1 Authentication
+- Staff login window.
+- Username and password inputs.
+- Credential verification against the users table.
+- Session/current-user state.
+- Logout action.
+- Failed-login validation and user notification.
+- Password hashing and secure credential handling.
+
+3.2 Home/navigation
+- Application title and branding.
+- Public reservation entry point.
+- Staff management entry point.
+- Main navigation shell.
+
+3.3 Guest reservation
+- Available-room browser.
+- Room detail window/page.
+- Booking form.
+- Payment details form.
+- Booking confirmation/receipt window.
+
+3.4 Room management
+- Room list.
+- Search by room number or room type.
+- Room detail window.
+- Create-room form.
+- Edit-room form.
+- Delete confirmation dialog.
+- Room-photo picker, preview, upload/copy, and deletion support.
+
+3.5 Reservation management
+- Reservation list.
+- Reservation detail window.
+- Guest, room, payment, and date information.
+- Reservation status editor.
+- Check-in/check-out date updates.
+
+3.6 Guest management
+- Guest list.
+- Guest detail window.
+- Guest reservation history.
+- Delete confirmation.
+- Optional future create/edit forms.
+
+3.7 Dashboard
+- Latest reservations.
+- Latest guests.
+- Latest rooms.
+- Counts and activity summaries.
+
+3.8 Shared services
+- Validation messages.
+- Success/error notifications.
+- Confirmation dialogs.
+- Date and currency formatting.
+- Logging and exception reporting.
+
+
+4. REQUIRED DESKTOP SCREENS
+---------------------------
+
+Screen 1: Welcome/Home
+- Hotel Reservation System title.
+- Branding/background image.
+- Reserve Room button.
+- Manage button.
+- Short system description.
+- Footer/application version.
+
+Screen 2: Staff Login
+- Username input.
+- Password input.
+- Login button.
+- Validation/error area.
+- Optional remember-me setting only if securely implemented.
+
+Screen 3: Staff Main Shell
+- Persistent sidebar or top navigation.
+- Dashboard navigation.
+- Reservations navigation.
+- Guests navigation.
+- Rooms navigation.
+- Current staff user display.
+- Logout button.
+
+Screen 4: Staff Dashboard
+- Latest Activities panel.
+- Latest reservation count/list.
+- Latest guest count/list.
+- Latest room count/list.
+- Refresh action.
+- Empty-state messages when no records exist.
+
+Screen 5: Guest Room Browser
+- Available room cards or table.
+- Room number.
+- Room type.
+- Price per night.
+- Availability status.
+- First photo thumbnail.
+- View Details and Reserve actions.
+- Optional search/filter/sort controls.
+
+Screen 6: Guest Room Details
+- Room number, type, price, and status.
+- Gallery of all room photos.
+- Reserve button.
+- Back button.
+- Clear unavailable-room state.
+
+Screen 7: Reservation/Booking Form
+- Selected room summary.
+- Guest name.
+- Email.
+- Phone number.
+- Address.
+- Payment amount.
+- Payment method.
+- Payment date.
+- Submit booking button.
+- Cancel/back button.
+- Field-level validation.
+
+Screen 8: Receipt/Booking Confirmation
+- Guest summary.
+- Room summary.
+- Payment summary.
+- Reservation confirmation.
+- Print receipt action.
+- Save/export receipt action.
+- Start another reservation/home action.
+
+Screen 9: Reservation List
+- Reservation ID.
+- Guest name.
+- Room number/type.
+- Check-in and check-out dates.
+- Status.
+- Open Details action.
+- Filter by status/date/guest/room.
+
+Screen 10: Reservation Details
+- Reservation data.
+- Guest contact information.
+- Room information.
+- Payment information.
+- Status dropdown.
+- Save status action.
+- Check-in/check-out timestamps or dates.
+
+Screen 11: Guest List
+- Guest name.
+- Email.
+- Phone.
+- Address.
+- Created date.
+- Open Details and Delete actions.
+
+Screen 12: Guest Details
+- Guest profile.
+- Reservation history.
+- Room and reservation statuses.
+- Delete guest action with confirmation.
+
+Screen 13: Room List
+- Room number.
+- Type.
+- Price.
+- Status.
+- First image.
+- Search field.
+- Create, Details, Edit, and Delete actions.
+
+Screen 14: Room Details
+- Room information.
+- Complete photo gallery.
+- Confirmed reservation list.
+- Guest names/emails for confirmed reservations.
+
+Screen 15: Create Room
+- Room number.
+- Room type.
+- Price per night.
+- Status.
+- Multiple image selection.
+- Image preview and removal before saving.
+- Save and cancel actions.
+
+Screen 16: Edit Room
+- Existing room number shown as read-only unless room-number editing is
+  deliberately enabled.
+- Room type.
+- Price.
+- Status.
+- Save and cancel actions.
+
+Dialog requirements:
+- Confirm destructive room and guest deletion.
+- Show validation failures without losing entered values.
+- Show database/file errors explicitly.
+- Prevent duplicate submissions while a save is in progress.
+
+
+5. DATA MODEL AND DATABASE REQUIREMENTS
+----------------------------------------
+
+Create database migrations for the following tables.
+
+users
+- id: integer primary key.
+- name: required string; unique if username uniqueness is required.
+- email: required string; unique.
+- email_verified_at: nullable datetime.
+- password_hash: required string.
+- remember token or equivalent only if persistent login is implemented.
+- created_at and updated_at.
+
+rooms
+- id: integer primary key.
+- rm_number: required string; unique.
+- rm_type: required string.
+- rm_price_per_night: required decimal(8,2), non-negative.
+- status: required enum/string; default available.
+- created_at and updated_at.
+
+rooms_photos
+- id: integer primary key.
+- room_id: required foreign key to rooms.id.
+- photo_path: required string.
+- created_at and updated_at.
+- Delete behavior: cascade metadata when a room is deleted.
+
+guests
+- id: integer primary key.
+- full_name: required string.
+- email: required unique string.
+- phone_number: nullable string.
+- address: nullable string.
+- created_at and updated_at.
+
+reservations
+- id: integer primary key.
+- room_id: required foreign key to rooms.id.
+- guest_id: required foreign key to guests.id.
+- check_in_date: required date/datetime.
+- check_out_date: required date/datetime.
+- status: required enum/string; default pending.
+- created_at and updated_at.
+
+payments
+- id: integer primary key.
+- reservation_id: required foreign key to reservations.id.
+- amount: required decimal(8,2), non-negative.
+- payment_method: required string/enum.
+- status: required enum/string; default pending.
+- payment_date: required date.
+- created_at and updated_at.
+
+amenities
+- id: integer primary key.
+- name: required string.
+- description: nullable text.
+- price: decimal(8,2), default zero.
+- created_at and updated_at.
+
+Framework/support tables:
+- password reset tokens if password reset is supported.
+- sessions only if session persistence is needed.
+- application settings/configuration table if settings must be editable.
+- audit_logs for staff actions in a production desktop application.
+
+Recommended indexes:
+- rooms.rm_number unique index.
+- rooms.status index.
+- rooms.rm_type index.
+- guests.email unique index.
+- reservations.room_id index.
+- reservations.guest_id index.
+- reservations.status index.
+- reservations.check_in_date index.
+- reservations.check_out_date index.
+- payments.reservation_id index.
+
+Important schema correction:
+- Do not add guest_id to payments unless the business model explicitly
+  requires it. The documented web code attempts to save guest_id, but the
+  current payments schema only relates payments to reservations.
+
+
+6. DOMAIN ENUMS AND BUSINESS RULES
+-----------------------------------
+
+Room status:
+- available
+- unavailable
+- optionally maintenance or inactive
+
+Reservation status:
+- pending
+- confirmed
+- checked_in
+- checked_out
+- cancelled
+
+Payment status:
+- pending
+- paid
+- failed
+- refunded
+
+Required rules:
+- Only available rooms may be shown in the public room browser.
+- A room cannot be booked if it is unavailable.
+- Room number must be unique.
+- Room price must be non-negative and stored with two decimal places.
+- Guest email must be valid and unique.
+- Existing guests should be reused by email during booking.
+- A booking must have a valid room, guest, dates, and payment amount.
+- Payment amount should normally equal the calculated reservation total.
+- Check-out must be after check-in.
+- A reservation must reference an existing room and guest.
+- A payment must reference an existing reservation.
+- Status changes must be restricted to known values.
+- Check-in sets the check-in date/time.
+- Check-out sets the check-out date/time.
+- Cancellation should release the room when no other active reservation
+  conflicts with it.
+- Deleting a room should remove its database photo metadata and either remove
+  or archive the physical image files.
+- Destructive actions require confirmation.
+
+Recommended improvement over the current web behavior:
+- Replace the hard-coded one-night stay with selected check-in/check-out
+  dates.
+- Calculate total price as nightly rate multiplied by number of nights,
+  plus any selected amenities.
+- Use a single database transaction for guest, reservation, payment, and room
+  status changes.
+- Recheck room availability inside the transaction to prevent double booking.
+
+
+7. SERVICE AND CODE LOGIC REQUIREMENTS
+---------------------------------------
+
+AuthenticationService:
+- authenticate(username, password).
+- Hash verification using Argon2id or bcrypt.
+- Establish current authenticated user.
+- clearSession/logout().
+- Return explicit invalid-credential errors.
+
+RoomService:
+- listAvailableRooms().
+- listRooms(limit, filters).
+- searchRooms(query).
+- getRoom(id).
+- createRoom(data, imageFiles).
+- updateRoom(id, data).
+- deleteRoom(id).
+- getRoomPhotos(id).
+- validateRoomInput(data).
+- Store image files in an application-managed directory, not an arbitrary
+  user-selected location.
+
+GuestService:
+- listGuests(limit).
+- getGuest(id).
+- findByEmail(email).
+- createOrReuseGuest(data).
+- getGuestReservations(id).
+- deleteGuest(id).
+- Define whether deletion is blocked when reservations exist or cascades.
+
+ReservationService:
+- listReservations(filters).
+- getReservationDetails(id).
+- createReservation(bookingData).
+- updateStatus(id, status).
+- calculateTotal(room, dates, amenities).
+- checkAvailability(roomId, dates).
+- set check-in/check-out dates when status changes.
+
+PaymentService:
+- createPayment(reservationId, paymentData).
+- validateAmount().
+- updatePaymentStatus().
+- retrieveReservationPayment().
+- Never store raw card numbers, CVV, or other sensitive payment credentials.
+
+DashboardService:
+- getLatestReservations(5).
+- getLatestGuests(5).
+- getLatestRooms(5).
+- Return view models that already contain display labels required by the UI.
+
+Validation service:
+- Required-field validation.
+- Email validation.
+- Date and date-range validation.
+- Decimal/currency validation.
+- File extension, MIME type, and size validation.
+- Duplicate room/guest checks.
+
+
+8. FILE AND IMAGE STORAGE
+-------------------------
+
+Create an application data directory such as:
+
+Windows:
+  %LOCALAPPDATA%\HotelReservationSystem\data\
+
+Suggested subdirectories:
+- database\
+- room-photos\
+- receipts\
+- backups\
+- logs\
+
+Requirements:
+- Generate collision-resistant photo filenames.
+- Validate file type and size before copying.
+- Store only relative paths in the database.
+- Display missing-image placeholders when a file is unavailable.
+- Keep database writes and file operations coordinated.
+- Clean up a copied image if database insertion fails.
+- Provide a backup option that includes both the database and room photos.
+
+
+9. DESKTOP NAVIGATION AND STATE
+-------------------------------
+
+Global application state:
+- Current authenticated staff user.
+- Selected room.
+- Selected reservation.
+- Current navigation page.
+- Notification queue.
+- Database connection/service status.
+
+Navigation rules:
+- Open Home without authentication.
+- Allow public room browsing and booking without staff login.
+- Require authentication before opening dashboard, room management, guest
+  management, and reservation management.
+- Return to login when logout is selected.
+- Clear sensitive form state after a successful booking or logout.
+- Disable staff actions when the database is unavailable.
+
+Use view models or presentation models so database entities are not directly
+responsible for UI formatting or control state.
+
+
+10. ERROR HANDLING AND LOGGING
+------------------------------
+
+Display actionable errors for:
+- Invalid login.
+- Missing or invalid form fields.
+- Room not found.
+- Guest/reservation/payment not found.
+- Room already unavailable.
+- Duplicate room number or guest email.
+- Database connection/query failure.
+- Image selection, copy, or deletion failure.
+- Receipt export/printing failure.
+
+Logging requirements:
+- Log unexpected exceptions with timestamp and stack trace.
+- Log failed database operations without passwords or payment secrets.
+- Log staff actions such as room deletion and reservation status changes.
+- Show users a safe message instead of raw exception details.
+- Never silently continue after a failed reservation or payment insert.
+
+
+11. SECURITY REQUIREMENTS
+-------------------------
+
+- Hash passwords using Argon2id or bcrypt; never store plaintext passwords.
+- Use parameterized SQL or a safe ORM.
+- Validate all desktop form input before persistence.
+- Restrict staff screens to authenticated staff users.
+- Add role/permission checks if more than one staff role is introduced.
+- Protect local database and photo directories with appropriate OS file
+  permissions.
+- Do not store card numbers, CVV, or sensitive payment credentials.
+- Mask sensitive values in logs.
+- Lock or timeout inactive staff sessions where appropriate.
+- Protect backups with encryption and access controls.
+- Validate image content and extension to reduce malicious-file risk.
+- Sign packaged installers and application updates when possible.
+
+
+12. REPORTING, PRINTING, AND EXPORT
+-----------------------------------
+
+Recommended desktop features:
+- Print a booking receipt.
+- Export receipt to PDF.
+- Export reservation and guest lists to CSV.
+- Print room availability.
+- Backup and restore database.
+- Optional daily reservation report.
+
+These features are not present as complete web routes but are natural
+desktop requirements for staff operation.
+
+
+13. SEEDING AND INITIAL CONFIGURATION
+-------------------------------------
+
+Provide a first-run setup process or seed command that can:
+- Create the database schema.
+- Create an initial staff account.
+- Require a password change after the first login.
+- Insert sample rooms if demo mode is selected.
+- Create application data directories.
+- Configure currency, hotel name, and receipt settings.
+
+The current development seed data contains:
+- Staff / test@example.com / staff.
+- StaffUser / staff@example.com / staff.
+- Room 101, Single, 100.00, Available.
+- Two photos associated with room 101.
+- Room 102, Double, 150.00, Available.
+
+Do not ship these plaintext development credentials in a production build.
+
+
+14. TESTING REQUIREMENTS
+------------------------
+
+Unit tests:
+- Password hashing and credential verification.
+- Room validation and price rules.
+- Guest email lookup and reuse.
+- Reservation total calculation.
+- Date-range validation.
+- Reservation status transitions.
+- Payment validation.
+- Image filename/path handling.
+
+Integration/database tests:
+- Migration creation and rollback.
+- Foreign-key behavior.
+- Room/photo persistence.
+- Guest/reservation/payment creation.
+- Cascade or protected-delete behavior.
+- Transaction rollback after a simulated failure.
+
+UI tests:
+- Login success and failure.
+- Public room browsing.
+- Room detail navigation.
+- Booking form validation.
+- Successful booking and receipt.
+- Room CRUD.
+- Room search.
+- Guest detail and deletion confirmation.
+- Reservation status update.
+- Logout and access restriction.
+
+Acceptance scenarios:
+1. Staff logs in and sees the dashboard.
+2. Guest views available rooms and selects one.
+3. Guest submits valid details and receives a receipt.
+4. The room becomes unavailable after booking.
+5. Staff views the reservation and payment.
+6. Staff changes status to checked_in and checked_out.
+7. Staff searches, edits, and deletes a room.
+8. Staff opens a guest and sees booking history.
+9. Invalid and conflicting operations produce clear errors.
+
+
+15. BUILD, PACKAGING, AND DEPLOYMENT
+------------------------------------
+
+Development build:
+- Run the selected framework's restore/install command.
+- Run database migrations.
+- Create local data directories.
+- Run unit, integration, and UI tests.
+- Start the desktop application in debug mode.
+
+Production build:
+- Compile in release mode.
+- Include migrations and first-run setup.
+- Include required runtime dependencies or use a self-contained build.
+- Bundle icons, branding, default styles, and fallback images.
+- Configure a writable application-data directory.
+- Create an installer and uninstaller.
+- Sign the application package where possible.
+- Include a version number and release notes.
+
+Deployment checklist:
+- Verify database initialization.
+- Verify image directory permissions.
+- Verify backup/restore.
+- Verify receipt printing/export.
+- Verify staff login.
+- Verify no development credentials are enabled.
+- Verify logs do not expose secrets.
+- Verify upgrade migration behavior.
+
+
+16. IMPLEMENTATION PHASES
+-------------------------
+
+Phase 1 - Foundation:
+- Choose desktop framework.
+- Create project and layered architecture.
+- Add configuration, logging, database connection, and migrations.
+- Build application shell and navigation.
+
+Phase 2 - Identity:
+- Implement users table and password hashing.
+- Build login/logout.
+- Add authenticated route/page guards.
+
+Phase 3 - Rooms:
+- Implement rooms and rooms_photos.
+- Build room list, search, detail, create, edit, delete, and image handling.
+
+Phase 4 - Guest booking:
+- Build available-room browser and detail page.
+- Build booking form and validation.
+- Implement guest reuse, reservation transaction, payment, and receipt.
+
+Phase 5 - Staff operations:
+- Build dashboard.
+- Build reservation list/detail/status management.
+- Build guest list/detail/delete and booking history.
+
+Phase 6 - Reliability:
+- Add transactions, conflict detection, audit logging, backups, and cleanup.
+- Resolve the documented schema/controller mismatches.
+
+Phase 7 - Quality and release:
+- Add automated tests.
+- Add printing/export.
+- Package installer.
+- Perform acceptance testing and security review.
+
+
+17. DEFINITION OF DONE
+----------------------
+
+The desktop implementation is complete when:
+- Staff can securely log in and log out.
+- Guests can browse only available rooms.
+- Room details and photos display correctly.
+- A valid booking creates one guest, reservation, and payment consistently.
+- A booked room cannot be double-booked.
+- Receipt data matches persisted reservation/payment data.
+- Staff can manage rooms, reservations, and guests.
+- Reservation status transitions update dates correctly.
+- Database and image storage are backed up together.
+- Invalid input and system failures are visible and actionable.
+- Automated tests cover the core workflows.
+- The application installs, starts, upgrades, and uninstalls reliably.
+- Production builds contain no development credentials or debug behavior.
+
+
+END OF DOCUMENT

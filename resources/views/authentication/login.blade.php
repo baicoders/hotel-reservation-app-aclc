@@ -5,7 +5,8 @@
 
         <div class="h-screen p-4">
             <div class="flex flex-col lg:flex-row gap-4 h-full w-full">
-                <div class="rounded-xl p-4 h-full basis-full flex justify-center items-center bg-cover bg-center bg-blend-multiply bg-gray-500 bg-fixed text-gray-300 relative" style="background-image: url('{{ asset('aclc_building_img.jpg') }}');">
+                <div class="rounded-xl p-4 h-full basis-full flex justify-center items-center bg-cover bg-center bg-blend-multiply bg-gray-500 bg-fixed text-gray-300 relative"
+                    style="background-image: url('{{ asset('aclc_building_img.jpg') }}');">
                     <a href="{{ url('/home') }}" class="text-2xl font-bold ">
                         @include('components.title')
                     </a>
@@ -13,7 +14,7 @@
                 <div class="bg-white rounded-xl p-4 flex justify-center items-center gap-4 basis-auto">
                     <form method="POST" action="{{ url('/login') }}" class="flex flex-col gap-2 w-96">
                         @csrf
-                        
+
                         <h2 class="text-2xl font-bold text-center">Login</h2>
                         @if (session('error'))
                             <div class="bg-red-100 text-red-700 p-2 rounded">
@@ -42,6 +43,9 @@
                             Login
                         </button>
 
+                        <a href="{{ url('/home') }}" class="text-center text-gray-500 hover:text-gray-700 mt-2">
+                            Back to Home
+                        </a>
                         {{-- <div class="bg-gray-300 rounded-xl p-4 h-full basis-full flex justify-center items-center">
                             Some Info Here
                         </div> --}}

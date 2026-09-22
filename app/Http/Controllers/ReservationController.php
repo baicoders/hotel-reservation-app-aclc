@@ -6,6 +6,7 @@ use App\Models\Guest;
 use App\Models\Payment;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use \App\Models\Room;
 
 class ReservationController extends Controller
@@ -37,7 +38,7 @@ class ReservationController extends Controller
     // reserving a room for the guest
     public function reserveRoomForm(Request $request)
     {
-        $room = $request->room_id ? Room::find($request->room_id) : null;
+        $room = $request->room_id ? Room::findOrFail($request->room_id) : null;
 
         return view('guest.reserved-room-form', compact('room'));
     }
@@ -56,10 +57,14 @@ class ReservationController extends Controller
             'payment_date' => 'required|date',
         ]);
 
-        $room = Room::find($validatedData['room_id']);
-        // check if amount is equal to room price
-        if ($validatedData['amount'] < $room->rm_price_per_night) {
-            return redirect()->back()->withErrors(['amount' => 'Amount must be equal to room price'])->withInput();
+        $room = Room::findOrFail($validatedData['room_id']);
+
+        if (strtolower($room->status) !== 'available') {
+            return redirect()->back()->withErrors(['room_id' => 'This room is no longer available.'])->withInput();
+        }
+
+        if ((float) $validatedData['amount'] !== (float) $room->rm_price_per_night) {
+            return redirect()->back()->withErrors(['amount' => 'Amount must equal the room price.'])->withInput();
         }
         $guest = (object) [
             'name' => $validatedData['name'],
@@ -73,36 +78,44 @@ class ReservationController extends Controller
             'payment_date' => $validatedData['payment_date'],
         ];
 
-        // store reservation to database here later
-        // check if the guest has already an account
-        $existingGuest = Guest::where('email', $guest->email)->first();
-        // if not create a new account for the guest
-        if (!$existingGuest) {
-            $existingGuest = Guest::create([
-                'full_name' => $guest->name,
-                'email' => $guest->email,
-                'phone_number' => $guest->phone,
-                'address' => $guest->address,
+        [$existingGuest, $reservation] = DB::transaction(function () use ($guest, $payment, $room) {
+            $room = Room::query()->lockForUpdate()->findOrFail($room->id);
+
+            if (strtolower($room->status) !== 'available') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'room_id' => 'This room is no longer available.',
+                ]);
+            }
+
+            $existingGuest = Guest::firstOrCreate(
+                ['email' => $guest->email],
+                [
+                    'full_name' => $guest->name,
+                    'phone_number' => $guest->phone,
+                    'address' => $guest->address,
+                ]
+            );
+
+            $room->update(['status' => 'unavailable']);
+
+            $reservation = Reservation::create([
+                'room_id' => $room->id,
+                'guest_id' => $existingGuest->id,
+                'check_in_date' => now(),
+                'check_out_date' => now()->addDay(),
+                'status' => 'confirmed',
             ]);
-        }
-        // make the room not available
-        $room->status = 'unavailable';
-        $room->save();
-        // create reservation
-        Reservation::create([
-            'room_id' => $room->id,
-            'guest_id' => $existingGuest->id,
-            'check_in_date' => now(),
-            'check_out_date' => now()->addDays(1), // assuming 1 day
-            'status' => 'confirmed',
-        ]);
-        Payment::create([
-            'reservation_id' => Reservation::latest()->first()->id,
-            'guest_id' => $existingGuest->id,
-            'amount' => $payment->amount,
-            'payment_method' => $payment->payment_method,
-            'payment_date' => $payment->payment_date,
-        ]);
+
+            Payment::create([
+                'reservation_id' => $reservation->id,
+                'amount' => $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'payment_date' => $payment->payment_date,
+                'status' => 'paid',
+            ]);
+
+            return [$existingGuest, $reservation];
+        });
 
         return view('guest.receipt-page', compact('room', 'guest', 'payment'));
     }
@@ -233,6 +246,13 @@ class ReservationController extends Controller
         } else {
             $reservation->update($validatedData);
         }
+
+        if (in_array($validatedData['status'], ['checked_out', 'cancelled'], true)) {
+            Room::whereKey($reservation->room_id)->update(['status' => 'available']);
+        } elseif (in_array($validatedData['status'], ['confirmed', 'checked_in'], true)) {
+            Room::whereKey($reservation->room_id)->update(['status' => 'unavailable']);
+        }
+
         return redirect()->back()->with('success', 'Reservation status updated successfully');
     }
 

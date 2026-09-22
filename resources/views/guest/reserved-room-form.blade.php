@@ -2,7 +2,7 @@
 
 @section('content')
     <div class=" bg-gray-300 ">
-        <div class="container p-4 mx-auto flex flex-col gap-4 ">
+        <div class="container p-4 mx-auto flex flex-col gap-4 max-w-[800px]">
             {{-- top bar --}}
             <div class="bg-white rounded-xl p-4 basis-auto">
                 <a href="{{ url('/home') }}" class="flex justify-center items-center gap-4">
@@ -17,7 +17,7 @@
                 <div class="bg-gray-200 rounded-t-xl p-4 min-h-[200px] basis-full">
                     Room To Reserve
                     <br>
-                    {{ $room->rm_number }} - {{ $room->rm_type }} - ${{ $room->rm_price_per_night }} per night
+                    {{ $room->rm_number }} - {{ $room->rm_type }} - ${{ number_format($room->rm_price_per_night, 2) }} per night
                 </div>
                 <form action="{{ url('/guest/rooms/booking-room') }}" method="POST" id="guestDetailsForm"
                     class="bg-white rounded-b-xl p-4 grid grid-cols-2 gap-2 basis-auto">
@@ -56,7 +56,7 @@
                     {{-- payment details --}}
                     <div>
                         <label for="amount" class="block font-semibold">Amount</label>
-                        <input type="number" name="amount" id="amount" value="{{ old('amount') }}"
+                        <input type="number" name="amount" id="amount" value="{{ old('amount', $room->rm_price_per_night) }}"
                             class="w-full p-2 border border-gray-300 rounded-xl" min="0" step="0.01" required>
                     </div>
 

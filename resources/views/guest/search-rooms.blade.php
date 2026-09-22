@@ -2,9 +2,14 @@
 
 @section('content')
     <div class=" bg-gray-300 ">
-        <div class="container p-4 mx-auto flex flex-col gap-4">
+        <div class="container p-4 mx-auto flex flex-col gap-4 max-w-[800px]">
             {{-- top bar --}}
-            <div class="bg-white rounded-xl p-4 h-full basis-full">
+            <div class="bg-white rounded-xl flex flex-row justify-between p-4 h-full basis-full">
+                <a href="{{ url('/home') }}" class="flex items-center gap-4">
+                    <h1 class="text-2xl">
+                        Back
+                    </h1>
+                </a>
                 <a href="{{ url('/home') }}" class="flex items-center gap-4">
                     <h1 class="text-2xl font-bold">
                         Hotel Reservation System!

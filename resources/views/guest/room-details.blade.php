@@ -1,8 +1,8 @@
 @extends('layout.app')
 
 @section('content')
-    <div class=" bg-gray-300 h-screen">
-        <div class="container p-4 mx-auto flex flex-col gap-4 h-full">
+    <div class=" bg-gray-300">
+        <div class="container p-4 mx-auto flex flex-col gap-4 h-auto max-w-[800px]">
             {{-- top bar --}}
             <div class="bg-white rounded-xl p-4 basis-auto">
                 <a href="{{ url('/home') }}" class="flex justify-center items-center gap-4">
@@ -56,9 +56,9 @@
                     Back
                 </a>
                 <form action="{{ url('/guest/rooms/reserve') }}" method="GET" class="basis-full">
-                    @csrf
                     <input type="hidden" name="room_id" value="{{ $room->id }}">
-                    <button type="submit" class="w-full bg-gray-100 hover:bg-gray-200 rounded-xl p-4">
+                    <button type="submit" @disabled(strtolower($room->status) !== 'available')
+                        class="w-full bg-gray-100 hover:bg-gray-200 rounded-xl p-4 disabled:cursor-not-allowed disabled:opacity-50">
                         Book Now
                     </button>
                 </form>

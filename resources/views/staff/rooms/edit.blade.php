@@ -22,7 +22,8 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div class="flex flex-col gap-1">
                                 <label for="roomNumber" class="font-bold">Room Number</label>
-                                <input type="text" id="roomNumber" name="roomNumber" value="{{ $room->rm_number }}"
+                                <input type="text" id="roomNumber" value="{{ $room->rm_number }}"
+                                    readonly
                                     class="border border-gray-300 rounded-xl p-2 w-full" />
                             </div>
                             <div class="flex flex-col gap-1">
@@ -38,9 +39,9 @@
                             <div class="flex flex-col gap-1">
                                 <label for="status" class="font-bold">Status</label>
                                 <select id="status" name="status" class="border border-gray-300 rounded-xl p-2 w-full">
-                                    <option value="Available" {{ $room->status === 'Available' ? 'selected' : '' }}>Available</option>
-                                    <option value="Occupied" {{ $room->status === 'Occupied' ? 'selected' : '' }}>Occupied</option>
-                                    <option value="Maintenance" {{ $room->status === 'Maintenance' ? 'selected' : '' }}>Maintenance</option>
+                                    <option value="available" {{ strtolower($room->status) === 'available' ? 'selected' : '' }}>Available</option>
+                                    <option value="unavailable" {{ strtolower($room->status) === 'unavailable' ? 'selected' : '' }}>Unavailable</option>
+                                    <option value="maintenance" {{ strtolower($room->status) === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
                                 </select>
                             </div>
                         </div>

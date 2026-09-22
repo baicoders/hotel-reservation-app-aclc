@@ -29,25 +29,28 @@
 
                             <div class="flex flex-col gap-1">
                                 <label for="roomNumber" class="font-bold">Room Number</label>
-                                <input type="number" id="roomNumber" name="roomNumber" value="00"
+                                <input type="text" id="roomNumber" name="roomNumber" value="{{ old('roomNumber') }}"
+                                    required
                                     class="border border-gray-300 rounded-xl p-2 w-full" />
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="roomType" class="font-bold">Room Type</label>
-                                <input type="text" id="roomType" name="roomType" value="Test"
+                                <input type="text" id="roomType" name="roomType" value="{{ old('roomType') }}"
+                                    required
                                     class="border border-gray-300 rounded-xl p-2 w-full" />
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="roomPrice" class="font-bold">Room Price</label>
-                                <input type="number" id="roomPrice" name="roomPrice" value="000.00"
+                                <input type="number" id="roomPrice" name="roomPrice" value="{{ old('roomPrice') }}"
+                                    min="0" step="0.01" required
                                     class="border border-gray-300 rounded-xl p-2 w-full" />
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="status" class="font-bold">Status</label>
                                 <select id="status" name="status" class="border border-gray-300 rounded-xl p-2 w-full">
-                                    <option value="Available" selected>Available</option>
-                                    <option value="Occupied">Occupied</option>
-                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="available" {{ old('status', 'available') === 'available' ? 'selected' : '' }}>Available</option>
+                                    <option value="unavailable" {{ old('status') === 'unavailable' ? 'selected' : '' }}>Unavailable</option>
+                                    <option value="maintenance" {{ old('status') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
                                 </select>
                             </div>
                         </div>

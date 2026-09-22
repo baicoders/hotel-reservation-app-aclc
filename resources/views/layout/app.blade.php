@@ -12,7 +12,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
+<body class="relative">
     {{-- page content --}}
     @yield('content')
 
@@ -23,5 +23,9 @@
     @include('components.pop-error')
     @include('components.modal-pop')
     @include('components.alert')
+
+    <h1 class="absolute top-2 right-2 p-2 bg-gray-100 rounded-2xl shadow-lg z-50">
+
+    </h1>
 </body>
 </html>

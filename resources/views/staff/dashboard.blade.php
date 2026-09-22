@@ -11,7 +11,7 @@
                 <div class="bg-white rounded-xl p-4 h-full flex justify-center items-center text-2xl font-bold">
                     Latest Activities
                 </div>
-                <div class="bg-white rounded-xl p-4 h-full flex flex-col gap-2 text-2xl font-bold">
+                <div class="bg-white rounded-xl p-4 h-full flex flex-col gap-2 text-2xl font-bold overflow-auto">
                     Reservations: {{ $latestReservations->count() }}
                     <div class="text-gray-500">
                         <ul class="list-disc ml-4 text-base">
@@ -23,7 +23,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl p-4 h-full flex  flex-col gap-2 text-2xl font-bold">
+                <div class="bg-white rounded-xl p-4 h-full flex  flex-col gap-2 text-2xl font-bold overflow-auto">
                     Guests: {{ $latestGuests->count() }}
                     <div class="text-gray-500">
                         <ul class="list-disc ml-4 text-base">
@@ -35,7 +35,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl p-4 h-full flex flex-col gap-2 text-2xl font-bold">
+                <div class="bg-white rounded-xl p-4 h-full flex flex-col gap-2 text-2xl font-bold overflow-auto">
                     Rooms: {{ $latestRooms->count() }}
                     <div class="text-gray-500">
                         <ul class="list-disc ml-4 text-base">

@@ -26,7 +26,11 @@ class RoomController extends Controller
     public function listRooms()
     {
         //
-        $rooms = Room::limit(50)->where('status', 'available')->with('firstPhoto')->latest('created_at')->get();
+        $rooms = Room::whereRaw('LOWER(status) = ?', ['available'])
+            ->limit(50)
+            ->with('firstPhoto')
+            ->latest('created_at')
+            ->get();
         // $rooms = Room::where('status', 'available')->with('firstPhoto')->latest('created_at')->get();
         // dd($rooms);
         return view('guest.search-rooms', compact('rooms'));
@@ -64,7 +68,7 @@ class RoomController extends Controller
             'roomNumber' => 'required|string|max:13|unique:rooms,rm_number',
             'roomType' => 'required|string|max:255',
             'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
-            'status' => 'nullable|string|max:128',
+            'status' => 'nullable|in:available,unavailable,maintenance',
         ]);
 
         // Remove dd($validatedData);
@@ -85,7 +89,7 @@ class RoomController extends Controller
             } else {
                 $uploadResult = $this->uploadSinglePhoto($request, $room->id);
             }
-            if (!$uploadResult || (method_exists($uploadResult, 'getStatusCode') && $uploadResult->getStatusCode() !== 200)) {
+            if (!$uploadResult) {
                 return redirect('/rooms')->with('error', 'Photo upload failed!');
             }
         }
@@ -114,7 +118,7 @@ class RoomController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Photos uploaded successfully!');
+        return true;
     }
     public function uploadSinglePhoto(Request $request, string $room_id)
     {
@@ -124,7 +128,7 @@ class RoomController extends Controller
             'roomPhotos' => 'required|image|mimes:jpeg,png,jpg,gif|max:4096',
         ]);
 
-        $photo = $request->file('photo');
+        $photo = $request->file('roomPhotos');
         $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
         $path = $photo->storeAs('room-photos', $filename, 'public');
 
@@ -135,7 +139,7 @@ class RoomController extends Controller
             'updated_at' => now(),
         ]);
 
-        return back()->with('success', 'Photo uploaded successfully!')->with('photo', $path);
+        return true;
     }
 
     /**
@@ -195,7 +199,7 @@ class RoomController extends Controller
             // 'roomNumber' => 'required|string|max:13|unique:rooms,rm_number,' . $room->rm_number,
             'roomType' => 'required|string|max:255',
             'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
-            'status' => 'nullable|string|max:128',
+            'status' => 'nullable|in:available,unavailable,maintenance',
         ]);
 
         $room->update([
@@ -214,15 +218,13 @@ class RoomController extends Controller
     public function destroy(string $room_id)
     {
         //
-        $room = Room::where('id', $room_id)->first();
+        $room = Room::find($room_id);
 
-        if ($room->exists()) {
-            // The record exists
-            $room->delete();
-        } else {
-            // The record does not exist
-            return redirect('/rooms')->with('message', 'Room Not Found!');
+        if (!$room) {
+            return redirect('/rooms')->with('error', 'Room not found.');
         }
+
+        $room->delete();
 
         // deletets the uploaded files
         // if (Storage::disk('public')->exists('room-covers/' . $room->thumbnail)) {

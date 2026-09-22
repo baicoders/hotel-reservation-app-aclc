@@ -1,0 +1,557 @@
+HOTEL RESERVATION SYSTEM
+SYSTEM DOCUMENTATION
+======================
+
+Document scope
+--------------
+This document describes the Laravel hotel-reservation-app as implemented in the
+repository at the time of writing. It covers the application purpose, runtime
+stack, user-facing functions, routes, UI structure, database schema, models,
+controllers, request/response logic, seed data, assets, and testing status.
+It documents current behavior; it does not imply that placeholder methods or
+commented-out workflows are production-ready.
+
+
+1. SYSTEM OVERVIEW
+------------------
+
+The application is a server-rendered hotel reservation system with two main
+experiences:
+
+1. Public guest experience:
+   - View the landing page.
+   - Browse rooms that are marked available.
+   - View room details and photos.
+   - Submit guest and payment information to reserve a room.
+   - Receive an in-memory receipt page after booking.
+
+2. Authenticated staff experience:
+   - Sign in and sign out.
+   - View a dashboard containing recent reservations, guests, and rooms.
+   - List and inspect reservations.
+   - Change reservation status.
+   - List and inspect guests.
+   - Delete guests.
+   - List, search, inspect, create, edit, and delete rooms.
+   - Upload room photos while creating a room.
+
+The application is built with Laravel 12, PHP 8.2+, Eloquent ORM, Blade
+templates, Tailwind CSS, and Vite. It uses Laravel's session-based web
+authentication middleware. There is no separate API layer or JavaScript
+single-page application.
+
+
+2. TECHNOLOGY AND PROJECT STRUCTURE
+------------------------------------
+
+Runtime and dependencies:
+- PHP: ^8.2
+- Laravel framework: ^12.0
+- Laravel Tinker: ^2.10.1
+- PHPUnit: ^11.5.3
+- Tailwind CSS: ^4.0.0
+- Vite: ^7.0.7
+- Axios is installed through package.json but is not used by the visible
+  application code.
+
+Important project directories:
+- app/Http/Controllers/       Request handling and application workflows.
+- app/Models/                 Eloquent models and persistence configuration.
+- app/Providers/              Service provider bootstrapping.
+- bootstrap/                  Laravel framework bootstrap files.
+- config/                     Framework and application configuration.
+- database/migrations/        Database table definitions.
+- database/factories/         Factory definitions for tests and seed data.
+- database/seeders/           Initial development data.
+- public/                     Public entry point and static assets.
+- resources/css/              Tailwind source CSS.
+- resources/js/               JavaScript entry point.
+- resources/views/             Blade page and reusable component templates.
+- routes/                     Web and console route definitions.
+- storage/                    Logs, generated framework files, and public
+                              storage target.
+- tests/                      Feature and unit tests.
+
+Primary source files:
+- routes/web.php
+- app/Http/Controllers/AuthenticationController.php
+- app/Http/Controllers/ManageController.php
+- app/Http/Controllers/RoomController.php
+- app/Http/Controllers/GuestController.php
+- app/Http/Controllers/ReservationController.php
+- app/Models/Room.php
+- app/Models/RoomModel.php
+- app/Models/Guest.php
+- app/Models/Reservation.php
+- app/Models/Payment.php
+- database/migrations/2025_10_03_030144_hotel_reservations_tables.php
+- resources/views/layout/app.blade.php
+
+
+3. USER ROLES AND ACCESS CONTROL
+--------------------------------
+
+Guests are not required to create an application account. They use public
+routes to browse and reserve a room. Guest details are saved in the guests
+table during booking.
+
+Staff use the users table and Laravel's auth middleware. Every route inside
+the staff route group requires an authenticated user:
+- /dashboard
+- /reservations and reservation detail/status routes
+- /guest and guest detail/delete routes
+- /rooms and room management routes
+
+Authentication details:
+- The login form accepts "username" and "password".
+- The username is matched against users.name, not users.email.
+- On successful login, the session is regenerated and the user is redirected
+  to the intended URL or dashboard.
+- On failure, the user is returned to the login form with an error and input.
+- Logout invalidates the session and regenerates the CSRF token before
+  redirecting to /login.
+- Blade forms use Laravel CSRF tokens where applicable.
+
+
+4. ROUTES AND REQUEST FLOWS
+---------------------------
+
+Public routes:
+
+GET  /                                      Renders home.blade.php.
+GET  /home                                  Renders the same home page.
+GET  /login                                 Shows authentication.login.
+POST /login                                 Authenticates a staff user.
+POST /logout                                Logs out the authenticated user.
+GET  /search-room                           Lists available rooms for guests.
+GET  /guest/rooms/details/{room_id}         Shows guest-facing room details.
+GET  /guest/rooms/reserve                   Shows the booking form. An
+                                             optional room_id query parameter
+                                             preloads the selected room.
+POST /guest/rooms/booking-room              Validates and creates a booking,
+                                             guest record, and payment, then
+                                             renders the receipt page.
+
+Authenticated staff routes:
+
+GET    /dashboard                           Staff dashboard.
+GET    /reservations                        Latest reservation list.
+GET    /reservations/details/{id}            Reservation, guest, room, payment
+                                             detail page.
+POST   /reservations/update-status/{id}     Validates and changes reservation
+                                             status and relevant date.
+GET    /guest                               Latest guest list.
+GET    /guest/details/{id}                  Guest details and booking history.
+DELETE /guest/delete/{id}                   Deletes a guest.
+GET    /rooms                               Latest room list.
+GET    /rooms/search                        Searches room number or type.
+GET    /rooms/details/{id}                  Room details, photos, confirmed
+                                             reservations, and guest names.
+GET    /rooms/edit/{id}                     Room edit form.
+POST   /rooms/update/{id}                   Validates and updates room data.
+GET    /rooms/create                        Room creation form.
+POST   /rooms/record                        Creates a room and optional photos.
+DELETE /rooms/delete/{id}                   Deletes a room.
+
+There are no named route declarations for most application routes; the login
+route and logout route are named.
+
+
+5. PUBLIC UI AND USER WORKFLOWS
+--------------------------------
+
+Shared layout:
+- resources/views/layout/app.blade.php is the base Blade layout.
+- It loads resources/css/app.css and resources/js/app.js through Vite.
+- Child pages supply content through the content section and optional inline
+  scripts through the scripts section.
+- Shared alert, error popup, and modal popup components are included after
+  page content.
+- The document title is "HRS".
+
+Home page:
+- resources/views/home.blade.php uses a full-height hero with
+  public/aclc_building_img.jpg as a background image.
+- It displays the hotel reservation welcome message.
+- Two large navigation cards lead to "Reserve Room" and "Manage".
+- A description panel explains that rooms, guests, reservations, and payments
+  can be managed.
+- The footer displays the current year and the project attribution.
+
+Room search:
+- resources/views/guest/search-rooms.blade.php displays room cards for public
+  visitors.
+- RoomController::listRooms limits results to 50, filters status to
+  "available", eager-loads the first photo, and sorts by newest creation date.
+- A room card can lead to the guest room details page.
+
+Guest room details:
+- resources/views/guest/room-details.blade.php displays selected room
+  information and its photo collection.
+- RoomController::reserveRoom loads the room and all rows from rooms_photos.
+- The page links to the reservation form with the selected room.
+
+Reservation form:
+- resources/views/guest/reserved-room-form.blade.php collects:
+  room_id, guest name, email, phone, address, amount, payment method, and
+  payment date.
+- The request is submitted to POST /guest/rooms/booking-room.
+- Validation errors are returned to the previous page with old input.
+
+Booking result:
+- On a successful booking, resources/views/guest/receipt-page.blade.php is
+  rendered using the room, guest, and payment objects assembled by the
+  controller.
+- The receipt is rendered immediately; there is no separate receipt lookup
+  route.
+- The workflow assumes a one-night reservation: check-in is now() and
+  check-out is now()->addDays(1).
+
+Additional guest templates:
+- guest/guest-form.blade.php and guest/payment-form.blade.php represent an
+  earlier multi-step booking design. The corresponding controller methods are
+  commented out and are not part of the active route flow.
+
+
+6. STAFF UI LAYOUT AND FEATURES
+-------------------------------
+
+Staff shell:
+- resources/views/components/sidebar.blade.php provides the left navigation.
+- The sidebar is approximately 260px wide and contains links to Dashboard,
+  Reservations, Guests, Rooms, and either Logout or Login depending on auth
+  state.
+- Staff pages use a gray full-screen background with white rounded content
+  panels.
+
+Dashboard:
+- resources/views/staff/dashboard.blade.php uses a two-column, two-row grid.
+- It shows a "Latest Activities" panel plus counts and lists for the latest
+  reservations, guests, and rooms.
+- ManageController::dashboard retrieves five latest records from each model.
+
+Reservations:
+- staff/reservations/list.blade.php lists up to 50 recent reservations,
+  including guest name, room number/type, dates, and status.
+- staff/reservations/info.blade.php shows a single reservation together with
+  its guest, room, and first payment.
+- staff/reservations/edit.blade.php is present as a template, but the active
+  update flow is a status form submitted from the reservation detail/list UI.
+- Valid statuses are pending, confirmed, checked_in, checked_out, and
+  cancelled.
+
+Guests:
+- staff/guest/list.blade.php lists up to 50 latest guests.
+- staff/guest/info.blade.php shows guest data and reservations associated with
+  that guest.
+- staff/guest/edit.blade.php exists, but GuestController has no implemented
+  update route or update behavior.
+- Deleting a guest is exposed through a DELETE form/action.
+
+Rooms:
+- staff/rooms/list.blade.php lists up to 10 latest rooms and their first photo.
+- staff/rooms/info.blade.php shows room data, all photos, and confirmed
+  reservations with guest contact labels.
+- staff/rooms/create.blade.php collects room number, type, price, status, and
+  optional room photos.
+- staff/rooms/edit.blade.php edits room type, price, and status. Room number
+  is displayed/retained but is not currently updated by the controller.
+- staff/rooms/list.blade.php also uses the staff room search endpoint.
+
+Reusable Blade components:
+- components/sidebar.blade.php: staff navigation.
+- components/room-cards.blade.php: reusable room presentation.
+- components/title.blade.php: application title/branding.
+- components/alert.blade.php: success/flash alert presentation.
+- components/pop-error.blade.php: validation/error popup presentation.
+- components/modal-pop.blade.php: modal presentation.
+- errors/404.blade.php: not-found page.
+
+
+7. CONTROLLERS AND CODE LOGIC
+-----------------------------
+
+AuthenticationController:
+- showLoginForm() returns the login view.
+- loginUser() reads username/password, maps username to users.name, calls
+  Auth::attempt(), regenerates the session on success, and redirects.
+- logout() logs out, invalidates the session, regenerates the CSRF token, and
+  redirects to login.
+
+ManageController:
+- dashboard() fetches five latest Reservation, Guest, and Room records and
+  passes them to staff.dashboard.
+
+RoomController:
+- index(): fetches up to 10 rooms with firstPhoto and newest-first ordering.
+- listRooms(): fetches up to 50 available rooms for public browsing.
+- search(): applies a partial-match query to rm_number or rm_type and returns
+  the staff room list.
+- create(): returns the room creation form.
+- store(): validates roomNumber, roomType, roomPrice, and optional status;
+  creates a Room; then processes one or multiple uploaded roomPhotos.
+- uploadPhoto(): validates an array of image files, stores each file on the
+  public disk under room-photos, and inserts rooms_photos rows.
+- uploadSinglePhoto(): validates one image and inserts its metadata. The
+  current implementation validates roomPhotos but reads the uploaded file
+  using the key "photo"; callers should keep this mismatch in mind.
+- show(): loads a room, all photos, and confirmed reservations joined to guest
+  names/emails for the staff detail page.
+- reserveRoom(): loads a room and its photos for the public detail page.
+- edit(): loads a room for editing.
+- update(): validates type, price, and status, then updates those fields.
+- destroy(): deletes the room record. The rooms_photos foreign key is defined
+  with cascading delete, but uploaded physical files are not deleted here.
+
+GuestController:
+- index(): lists the 50 latest guests.
+- show(): loads one guest and joins reservations to rooms to build the
+  guest's booking history.
+- destroy(): deletes the guest and redirects with a success message.
+- create(), store(), edit(), and update() are placeholders with no active
+  behavior.
+
+ReservationController:
+- index(): joins reservations, guests, and rooms to produce a staff list of
+  up to 50 recent reservations.
+- reserveRoomForm(): optionally loads a room from request.room_id and returns
+  the public booking form.
+- reserveRoom(): validates guest/payment data; verifies the supplied amount is
+  not less than the nightly room price; reuses a guest with the same email or
+  creates one; marks the room unavailable; creates a confirmed reservation;
+  creates a payment; and renders the receipt view.
+- show(): loads reservation, guest, room, and first payment for staff detail.
+- update(): validates the status against the allowed status list. checked_in
+  updates check_in_date; checked_out updates check_out_date; all other
+  statuses only update status.
+- create(), store(), edit(), and destroy() are placeholders.
+
+Model and relationship logic:
+- Room is mass assignable for room number, type, nightly price, and status.
+  firstPhoto() defines a has-one relation to RoomModel ordered by oldest id.
+- RoomModel represents the rooms_photos table and is mass assignable for
+  room_id and photo_path.
+- Guest is mass assignable for full name, email, phone number, and address.
+- Reservation is mass assignable for room_id, guest_id, check-in/check-out
+  dates, and status.
+- Payment is mass assignable for reservation_id, amount, payment date,
+  payment method, and status.
+- User is Laravel's Authenticatable model. Passwords are cast as hashed;
+  password and remember token are hidden.
+- Most cross-entity reads are implemented with explicit joins in controllers,
+  rather than Eloquent relationship methods on Reservation, Guest, or Payment.
+
+
+8. DATABASE SCHEMA
+------------------
+
+Application tables from
+database/migrations/2025_10_03_030144_hotel_reservations_tables.php:
+
+rooms
+- id: auto-increment primary key.
+- rm_number: string, unique room number.
+- rm_type: string room type.
+- rm_price_per_night: decimal(8,2).
+- status: string, default "available".
+- created_at, updated_at.
+
+rooms_photos
+- id: auto-increment primary key.
+- room_id: foreign key to rooms.id, cascade on room deletion.
+- photo_path: stored public-disk path.
+- created_at, updated_at.
+
+guests
+- id: auto-increment primary key.
+- full_name: string.
+- email: string, unique.
+- phone_number: nullable string.
+- address: nullable string.
+- created_at, updated_at.
+
+reservations
+- id: auto-increment primary key.
+- room_id: foreign key to rooms.id, cascade on room deletion.
+- guest_id: foreign key to guests.id, cascade on guest deletion.
+- check_in_date: date.
+- check_out_date: date.
+- status: string, default "pending".
+- created_at, updated_at.
+
+payments
+- id: auto-increment primary key.
+- reservation_id: foreign key to reservations.id, cascade on reservation
+  deletion.
+- amount: decimal(8,2).
+- payment_method: string.
+- status: string, default "pending".
+- payment_date: date.
+- created_at, updated_at.
+
+Important implementation mismatch:
+- ReservationController::reserveRoom() currently passes guest_id to
+  Payment::create(), but the payments migration does not define a guest_id
+  column and Payment::$fillable does not include it. The booking flow should
+  be reviewed before being treated as production-ready.
+
+Laravel framework tables:
+- users: id, name, unique email, email verification timestamp, password,
+  remember token, timestamps.
+- password_reset_tokens: email primary key, token, created_at.
+- sessions: session id, optional user_id, IP address, user agent, payload,
+  last activity, with indexes where defined.
+- cache and cache_locks: framework cache storage.
+- jobs, job_batches, and failed_jobs: queue storage.
+
+The down() method in the hotel migration drops rooms, reservations, guests,
+payments, and amenities. Because rooms_photos is not explicitly dropped in
+that method, rollback ordering relies on the database's handling of the
+foreign key and should be reviewed if migrations are rolled back.
+
+Amenities:
+- The amenities table has id, name, nullable description, decimal price
+  defaulting to zero, and timestamps.
+- No active model, controller, route, or view currently uses amenities.
+
+
+9. VALIDATION, STORAGE, AND DATA RULES
+--------------------------------------
+
+Room creation:
+- roomNumber is required, string, max 13 characters, and unique.
+- roomType is required, string, max 255 characters.
+- roomPrice is required, numeric, minimum 0, maximum 99999.99, and exactly
+  two decimal places.
+- status is optional, string, max 128 characters; defaults to available.
+
+Room update:
+- roomType and roomPrice use the same core rules.
+- status is optional and defaults to available.
+- room number is not changed by the update action.
+
+Room photos:
+- Accepted types are jpeg, png, jpg, and gif.
+- Maximum file size is 4096 KB.
+- Files are saved to the public filesystem disk in room-photos.
+- Metadata is stored in rooms_photos.
+
+Guest booking:
+- room_id, name, email, phone, address, amount, payment_method, and
+  payment_date are required.
+- email must be a valid email address.
+- payment_date must be a date.
+- The amount cannot be lower than the room nightly price.
+- A guest is deduplicated by email.
+- A successful booking changes the room status to unavailable.
+
+Reservation status:
+- Allowed values are pending, confirmed, checked_in, checked_out, and
+  cancelled.
+
+
+10. FRONTEND, ASSETS, AND BUILD
+-------------------------------
+
+- Tailwind CSS is imported from resources/css/app.css.
+- Tailwind scans Blade and JavaScript sources using @source directives.
+- resources/js/app.js imports resources/js/bootstrap.js.
+- Vite is configured through vite.config.js and Laravel's Vite plugin.
+- npm run dev starts the Vite development server.
+- npm run build creates production frontend assets.
+- composer dev runs the Laravel server, queue listener, and Vite concurrently.
+- public/aclc_building_img.jpg is used by the home-page hero.
+- Public storage links are expected for uploaded room photos; the composer
+  script set-storage-link runs php artisan storage:link --force.
+
+
+11. SEED DATA AND FACTORIES
+---------------------------
+
+DatabaseSeeder creates:
+- Staff user with name Staff, email test@example.com, password staff.
+- Staff user with name StaffUser, email staff@example.com, password staff.
+- Room 101, Single, price 100.00, status Available.
+- Two photo metadata records for room id 1.
+- Room 102, Double, price 150.00, status Available.
+
+Factories exist for User, Room, Guest, Reservation, Payment, and RoomModel.
+The RoomModelFactory currently returns an empty definition. Guest,
+Reservation, and Payment bulk factory seeding is commented out in the
+database seeder.
+
+
+12. TESTING STATUS
+------------------
+
+The repository currently contains the Laravel example tests:
+- tests/Feature/ExampleTest.php checks that the application returns a
+  successful response.
+- tests/Unit/ExampleTest.php checks a true assertion.
+- tests/TestCase.php provides the application test base.
+
+There are no visible focused tests for authentication, booking, room CRUD,
+photo uploads, reservation status transitions, guest deletion, or database
+constraints. Run the configured suite with:
+
+    composer test
+
+Build frontend assets with:
+
+    npm run build
+
+
+13. CURRENT LIMITATIONS AND FOLLOW-UP AREAS
+-------------------------------------------
+
+- Booking is hard-coded to one night and does not collect check-in/check-out
+  dates from the guest.
+- Booking does not use a database transaction, so a failure after changing
+  room status can leave partial data.
+- The booking amount check enforces a minimum rather than exact equality,
+  despite the surrounding comment saying it should equal the room price.
+- The payment creation payload references guest_id even though the payments
+  table does not contain that column.
+- Room availability is represented by a free-form status string and is not
+  re-opened automatically after checkout or cancellation.
+- The dashboard requests plain Reservation models but the dashboard view
+  displays guest_name, which is supplied by the reservation list join rather
+  than by the dashboard query.
+- Guest create/edit/update actions are placeholders.
+- Reservation create/edit/store/destroy actions are placeholders.
+- Amenities are schema-only and have no user-facing functionality.
+- Uploaded photo files are not removed when a room is deleted.
+- Authorization is currently binary authenticated/not authenticated; there
+  are no staff roles or permissions beyond login.
+- The visible test suite is still mostly framework scaffolding.
+- Some templates and controller methods reflect an earlier multi-step booking
+  flow and are commented out rather than removed.
+
+
+14. OPERATIONAL STARTUP
+-----------------------
+
+Typical local setup:
+
+1. Install PHP dependencies:
+       composer install
+2. Install frontend dependencies:
+       npm install
+3. Configure .env and database settings.
+4. Generate the application key if required:
+       php artisan key:generate
+5. Run migrations and seed development records:
+       php artisan migrate --seed
+6. Create the public storage link:
+       php artisan storage:link --force
+7. Start the application:
+       php artisan serve
+   In a separate terminal, run:
+       npm run dev
+
+The repository also supplies compose.yaml for container-oriented development.
+The exact database and service values should be read from that file and the
+active .env before deployment.
+
+
+END OF DOCUMENT
