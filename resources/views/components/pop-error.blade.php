@@ -1,26 +1,16 @@
-{{-- error --}}
 @if ($errors->any())
-    <div class="bg-white rounded-xl shadow-lg fixed top-4 right-4 z-50">
-        <p class="bg-red-300 p-2 px-3 rounded-t-xl flex justify-between"><strong>Error!</strong> <span
-                onclick="closeError()">Close</span></p>
-        <ul class="p-2 px-3 rounded-b-xl">
+    <div data-toast role="alert"
+        class="w-full rounded-xl border border-brick-700/20 bg-brick-100 p-4 text-brick-700 shadow-lg">
+        <div class="flex items-start gap-3">
+            <p class="flex-1 text-sm font-semibold">Please fix the following:</p>
+            <button type="button" data-toast-close class="text-sm font-semibold underline-offset-2 hover:underline">
+                Dismiss
+            </button>
+        </div>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
         </ul>
     </div>
-
-    <!-- Happiness is not something readymade. It comes from your own actions. - Dalai Lama -->
 @endif
-
-<script>
-    // auto close after 5 seconds
-    const closeError = () => {
-        const errorDiv = document.querySelector('.bg-white.rounded-xl.shadow-lg.fixed.top-4.right-4.z-50');
-        if (errorDiv) {
-            errorDiv.remove();
-        }
-    }
-
-    setTimeout(closeError, 8000);
-</script>
