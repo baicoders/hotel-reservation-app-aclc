@@ -13,13 +13,23 @@ class RoomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        // $rooms = Room::limit(10)->leftJoin('rooms_photos', 'rooms.id', '=', 'rooms_photos.room_id')->select('rooms.*', 'rooms_photos.room_id','rooms_photos.photo_path')->latest('rooms.created_at')->distinct('rooms_photos.room_id')->get();
-        $rooms = Room::limit(10)->with('firstPhoto')->latest('created_at')->get();
-        // dd($rooms);
-        return view('staff.rooms.list', compact('rooms'));
+        $query = is_string($request->input('query')) ? trim($request->input('query')) : '';
+        $status = in_array($request->input('status'), ['available', 'unavailable', 'maintenance'], true)
+            ? $request->input('status')
+            : null;
+
+        $rooms = Room::with('firstPhoto')
+            ->when($query !== '', fn ($rooms) => $rooms->where(fn ($match) => $match
+                ->where('rm_number', 'like', '%' . $query . '%')
+                ->orWhere('rm_type', 'like', '%' . $query . '%')))
+            ->when($status, fn ($rooms) => $rooms->whereRaw('LOWER(status) = ?', [$status]))
+            ->orderByRaw('LENGTH(rm_number), rm_number')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('staff.rooms.list', compact('rooms', 'query', 'status'));
     }
 
     // list of room to reserve for the guest
@@ -37,15 +47,7 @@ class RoomController extends Controller
     }
     public function search(Request $request)
     {
-        $query = $request->input('query');
-
-        $rooms = Room::where('rm_number', 'like', '%' . $query . '%')
-            ->with('firstPhoto')
-            ->orWhere('rm_type', 'like', '%' . $query . '%')
-            ->latest()
-            ->get();
-
-        return view('staff.rooms.list', compact('rooms'));
+        return $this->index($request);
     }
 
 

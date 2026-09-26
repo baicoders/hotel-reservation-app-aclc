@@ -8,8 +8,11 @@
 - The confirm dialog uses the native dialog element: Escape closes it and focus starts on Cancel.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, and new guests.
+- The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag.
 
 ### Fixed
 - Pages no longer print markup before the doctype, which forced browsers into quirks mode.
 - Error notices such as "Photo upload failed!" are now shown to staff.
 - Dashboard counts were capped at 5 because they counted the latest five records; they now count the whole table.
+- The staff rooms list showed only 10 rooms; every room is now reachable through the pager.
+- Room photos that are missing or fail to load show "No photo yet" instead of a broken image.

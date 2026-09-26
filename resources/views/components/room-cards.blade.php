@@ -1,39 +1,28 @@
-@props([
-    'roomNumber' => '010',
-    'roomType' => 'Single',
-    'roomPrice' => '0.00',
-    'status' => 'Available',
-    'isGuest' => false,
-    'room_id',
-])
-
-<div class="shadow-md rounded-xl">
-
-    @if ($photo_path)
-        <img src="{{ asset('storage/' . ($photo_path ?? 'no-image.png')) }}" alt="Room Image"
-            class="w-full h-[250px] object-cover rounded-t-xl">
-    @else
-        <div class="bg-gray-300 rounded-t-xl p-4 flex justify-center items-center h-[250px]">
-            No Image
-        </div>
-    @endif
-
-    <div class="bg-gray-200 rounded-b-xl p-4 flex flex-col gap-1">
-        <h1 class="font-bold text-2xl">{{ $roomNumber }}</h1>
-        <p class="font-bold">{{ $roomType }}</p>
-        <p>Room Price per night: {{ $roomPrice }}</p>
-        <p>Status: {{ $status }}</p>
-
-        @if ($isGuest)
-            <a href="{{ url('/guest/rooms/details/' . $room_id) }}" class="bg-white rounded-xl p-3">View Details</a>
-        @else
-            <a href="{{ url('/rooms/details/' . $room_id) }}" class="bg-white rounded-xl p-3">View Info</a>
+@php
+    $href = ($isGuest ?? false) ? url('/guest/rooms/details/' . $room_id) : url('/rooms/details/' . $room_id);
+@endphp
+<article class="card group relative flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
+    <div class="relative aspect-[4/3] bg-lobby-50">
+        <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center text-sm text-muted">No photo yet</span>
+        @if (!empty($photo_path))
+            <img src="{{ asset('storage/' . $photo_path) }}" alt="Room {{ $roomNumber }}" loading="lazy"
+                onerror="this.remove()" class="absolute inset-0 size-full object-cover">
         @endif
-        {{-- @guest
-            <a href="{{ url('/guest/rooms/details') }}" class="bg-white rounded-xl p-3">View Details</a>
-        @else
-            <a href="{{ url('/rooms/details') }}" class="bg-white rounded-xl p-3">View Info</a>
-        @endguest --}}
+        <div class="absolute top-3 left-3">
+            @include('components.key-tag', ['number' => $roomNumber])
+        </div>
     </div>
-    <!-- When there is no desire, all things are at peace. - Laozi -->
-</div>
+
+    <div class="flex flex-1 flex-col gap-3 p-4">
+        <div class="flex items-start justify-between gap-3">
+            <h2 class="font-semibold capitalize">{{ $roomType }}</h2>
+            @include('components.status-badge', ['status' => $status])
+        </div>
+        <p class="text-sm text-muted">
+            <span class="text-lg font-semibold text-ink tabular-nums">${{ number_format((float) $roomPrice, 2) }}</span> per night
+        </p>
+        <a href="{{ $href }}" class="mt-auto text-sm font-semibold text-lobby-700 after:absolute after:inset-0 group-hover:underline">
+            View details<span class="sr-only"> for room {{ $roomNumber }}</span>
+        </a>
+    </div>
+</article>
