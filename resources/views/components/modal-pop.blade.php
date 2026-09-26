@@ -31,7 +31,7 @@
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').textContent = message;
             dialog.showModal();
-            document.getElementById('confirm-accept').focus();
+            document.getElementById('confirm-cancel').focus();
             return false;
         };
     })();
