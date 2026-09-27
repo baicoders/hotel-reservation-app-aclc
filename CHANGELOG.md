@@ -21,6 +21,7 @@
 - The guest page shows the profile, every reservation with its room and both statuses, and a Delete guest action that states the reservation count.
 
 ### Fixed
+- Pages in the local Docker setup took up to several seconds to load; PHP now caches compiled code for the dev server (restart the app container after editing PHP or Blade files).
 - Pages no longer print markup before the doctype, which forced browsers into quirks mode.
 - Error notices such as "Photo upload failed!" are now shown to staff.
 - Dashboard counts were capped at 5 because they counted the latest five records; they now count the whole table.
