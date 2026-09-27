@@ -19,7 +19,7 @@
             </dl>
 
             <form action="{{ url('/guest/delete/' . $guest->id) }}" id="guest_delete_form" method="POST" data-busy-label="Deleting..." class="mt-6 border-t border-line pt-6"
-                onsubmit="return handleFormSubmission(event, @js($guest->full_name . ' and their ' . $bookings->count() . ' ' . Str::plural('reservation', $bookings->count()) . ', with their payments, will be deleted. Rooms they hold become available again. This cannot be undone.'), 'Delete guest?', 'guest_delete_form');">
+                onsubmit="return handleFormSubmission(event, @js($guest->full_name . ' and their ' . $bookings->count() . ' ' . Str::plural('reservation', $bookings->count()) . ', with their payments, will be deleted. Rooms they are checked in to become available again. This cannot be undone.'), 'Delete guest?', 'guest_delete_form');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger w-full">Delete guest</button>

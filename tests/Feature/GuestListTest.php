@@ -73,11 +73,11 @@ class GuestListTest extends TestCase
         $this->actingAs($this->staff())->get('/guest')->assertSee('their 2 reservations');
     }
 
-    public function test_delete_releases_the_room_of_an_active_reservation(): void
+    public function test_delete_frees_the_room_of_a_checked_in_guest(): void
     {
         $room = Room::factory()->create(['rm_number' => '305', 'status' => 'unavailable']);
         $guest = Guest::factory()->create();
-        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'confirmed']);
+        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'checked_in']);
 
         $this->actingAs($this->staff())->delete('/guest/delete/' . $guest->id);
 
@@ -88,7 +88,7 @@ class GuestListTest extends TestCase
     {
         $room = Room::factory()->create(['status' => 'unavailable']);
         $guest = Guest::factory()->create();
-        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'confirmed']);
+        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'checked_in']);
         Reservation::factory()->create(['room_id' => $room->id, 'status' => 'checked_in']);
 
         $this->actingAs($this->staff())->delete('/guest/delete/' . $guest->id);
@@ -100,11 +100,22 @@ class GuestListTest extends TestCase
     {
         $room = Room::factory()->create(['status' => 'maintenance']);
         $guest = Guest::factory()->create();
-        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'confirmed']);
+        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'checked_in']);
 
         $this->actingAs($this->staff())->delete('/guest/delete/' . $guest->id);
 
         $this->assertSame('maintenance', $room->fresh()->status);
+    }
+
+    public function test_delete_of_a_future_stay_leaves_the_room_status_alone(): void
+    {
+        $room = Room::factory()->create(['status' => 'unavailable']);
+        $guest = Guest::factory()->create();
+        Reservation::factory()->create(['guest_id' => $guest->id, 'room_id' => $room->id, 'status' => 'confirmed']);
+
+        $this->actingAs($this->staff())->delete('/guest/delete/' . $guest->id);
+
+        $this->assertSame('unavailable', $room->fresh()->status);
     }
 
     public function test_delete_returns_to_the_list_with_a_notice(): void

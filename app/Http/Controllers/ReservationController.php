@@ -62,8 +62,8 @@ class ReservationController extends Controller
             return redirect('/search-room');
         }
 
-        if (strtolower($room->status) !== 'available') {
-            return redirect('/guest/rooms/details/' . $room->id)->with('error', 'This room is no longer available.');
+        if (strtolower($room->status) === 'maintenance') {
+            return redirect('/guest/rooms/details/' . $room->id)->with('error', 'This room is closed for maintenance and cannot be booked.');
         }
 
         return view('guest.reserved-room-form', compact('room'));
@@ -107,8 +107,8 @@ class ReservationController extends Controller
         [$reservation, $payment] = DB::transaction(function () use ($validatedData, $room, $checkIn, $checkOut, $total) {
             $room = Room::query()->lockForUpdate()->findOrFail($room->id);
 
-            if (strtolower($room->status) !== 'available') {
-                throw ValidationException::withMessages(['room_id' => 'This room is no longer available.']);
+            if (strtolower($room->status) === 'maintenance') {
+                throw ValidationException::withMessages(['room_id' => 'This room is closed for maintenance and cannot be booked.']);
             }
 
             $overlaps = Reservation::where('room_id', $room->id)
@@ -129,8 +129,6 @@ class ReservationController extends Controller
                     'address' => $validatedData['address'],
                 ]
             );
-
-            $room->update(['status' => 'unavailable']);
 
             $reservation = Reservation::create([
                 'room_id' => $room->id,
@@ -273,26 +271,34 @@ class ReservationController extends Controller
         $validatedData = $request->validate([
             'status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
         ]);
-        // Update status and dates if needed
-        if ($validatedData['status'] === 'checked_in') {
-            $reservation->update([
-            'status' => $validatedData['status'],
-            'check_in_date' => now(),
-            ]);
-        } elseif ($validatedData['status'] === 'checked_out') {
-            $reservation->update([
-            'status' => $validatedData['status'],
-            'check_out_date' => now(),
-            ]);
-        } else {
-            $reservation->update($validatedData);
-        }
+        $newStatus = $validatedData['status'];
 
-        if (in_array($validatedData['status'], ['checked_out', 'cancelled'], true)) {
-            Room::whereKey($reservation->room_id)->update(['status' => 'available']);
-        } elseif (in_array($validatedData['status'], ['confirmed', 'checked_in'], true)) {
-            Room::whereKey($reservation->room_id)->update(['status' => 'unavailable']);
-        }
+        DB::transaction(function () use ($reservation, $newStatus) {
+            $room = Room::query()->lockForUpdate()->findOrFail($reservation->room_id);
+            $wasCheckedIn = $reservation->status === 'checked_in';
+
+            $changes = ['status' => $newStatus];
+            if ($newStatus === 'checked_in') {
+                $changes['check_in_date'] = now();
+            } elseif ($newStatus === 'checked_out') {
+                $changes['check_out_date'] = now();
+            }
+            $reservation->update($changes);
+
+            $roomStatus = strtolower($room->status);
+            if ($newStatus === 'checked_in' && $roomStatus !== 'maintenance') {
+                $room->update(['status' => 'unavailable']);
+            } elseif ($roomStatus === 'unavailable' && ($wasCheckedIn || in_array($newStatus, ['checked_out', 'cancelled'], true))) {
+                $othersCheckedIn = Reservation::where('room_id', $room->id)
+                    ->whereKeyNot($reservation->id)
+                    ->where('status', 'checked_in')
+                    ->exists();
+
+                if (! $othersCheckedIn) {
+                    $room->update(['status' => 'available']);
+                }
+            }
+        });
 
         return redirect()->back()->with('success', 'Reservation status updated successfully');
     }

@@ -4,7 +4,7 @@
 @section('eyebrow', 'Rooms')
 
 @section('page-actions')
-    @if (strtolower($room->status) === 'available')
+    @if (strtolower($room->status) !== 'maintenance')
         <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room->id }}" class="btn btn-secondary">Book this room</a>
     @endif
     <a href="{{ url('/rooms/edit/' . $room->id) }}" class="btn btn-primary">Edit room</a>

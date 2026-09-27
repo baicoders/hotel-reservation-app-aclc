@@ -47,7 +47,7 @@
                                     Open details<span class="sr-only"> for {{ $guest->full_name }}</span>
                                 </a>
                                 <form action="{{ url('/guest/delete/' . $guest->id) }}" method="POST" id="guest_delete_{{ $guest->id }}" data-busy-label="Deleting..."
-                                    onsubmit="return handleFormSubmission(event, @js($guest->full_name . ' and their ' . $guest->reservations_count . ' ' . Str::plural('reservation', $guest->reservations_count) . ', with their payments, will be deleted. Rooms they hold become available again. This cannot be undone.'), 'Delete guest?', 'guest_delete_{{ $guest->id }}');">
+                                    onsubmit="return handleFormSubmission(event, @js($guest->full_name . ' and their ' . $guest->reservations_count . ' ' . Str::plural('reservation', $guest->reservations_count) . ', with their payments, will be deleted. Rooms they are checked in to become available again. This cannot be undone.'), 'Delete guest?', 'guest_delete_{{ $guest->id }}');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="font-semibold text-brick-700 hover:underline">

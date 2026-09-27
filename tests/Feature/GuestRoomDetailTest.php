@@ -23,6 +23,13 @@ class GuestRoomDetailTest extends TestCase
         $this->visit($room)->assertSee(url('/guest/rooms/reserve') . '?room_id=' . $room->id);
     }
 
+    public function test_occupied_room_still_offers_reserve(): void
+    {
+        $room = Room::factory()->create(['status' => 'unavailable']);
+
+        $this->visit($room)->assertSee(url('/guest/rooms/reserve') . '?room_id=' . $room->id);
+    }
+
     public function test_room_in_maintenance_explains_it_cannot_be_booked(): void
     {
         $room = Room::factory()->create(['status' => 'maintenance']);

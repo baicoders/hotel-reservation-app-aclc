@@ -4,7 +4,7 @@
 @section('eyebrow', 'Room details')
 
 @section('page')
-    @php $available = strtolower($room->status) === 'available'; @endphp
+    @php $bookable = strtolower($room->status) !== 'maintenance'; @endphp
     <div class="grid gap-6 lg:grid-cols-5">
         <section class="card overflow-hidden lg:col-span-3" aria-label="Photos">
             @include('components.room-gallery', ['images' => $photos, 'roomNumber' => $room->rm_number])
@@ -27,7 +27,7 @@
                 </div>
             </dl>
 
-            @if ($available)
+            @if ($bookable)
                 <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room->id }}" class="btn btn-primary mt-6 w-full py-3 text-base">Reserve this room</a>
             @else
                 <div role="note" class="mt-6 rounded-lg bg-brass-100 p-4 text-sm text-brass-700">
@@ -35,7 +35,7 @@
                     <p class="mt-1">Choose another room from the available rooms.</p>
                 </div>
             @endif
-            <a href="{{ url('/search-room') }}" class="btn btn-secondary mt-3 w-full">{{ $available ? 'Back to rooms' : 'See available rooms' }}</a>
+            <a href="{{ url('/search-room') }}" class="btn btn-secondary mt-3 w-full">{{ $bookable ? 'Back to rooms' : 'See available rooms' }}</a>
         </section>
     </div>
 @endsection

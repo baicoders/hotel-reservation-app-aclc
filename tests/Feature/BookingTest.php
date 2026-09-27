@@ -54,12 +54,25 @@ class BookingTest extends TestCase
         $this->assertSame('300.00', Payment::first()->amount);
     }
 
-    public function test_booking_marks_the_room_unavailable(): void
+    public function test_booking_leaves_the_room_status_alone(): void
     {
         $room = $this->room();
         $this->book($room);
 
-        $this->assertSame('unavailable', $room->fresh()->status);
+        $this->assertSame('available', $room->fresh()->status);
+    }
+
+    public function test_occupied_room_can_be_booked_for_later_dates(): void
+    {
+        $room = $this->room('unavailable');
+        Reservation::factory()->create(['room_id' => $room->id, 'status' => 'checked_in', 'check_in_date' => $this->day(0), 'check_out_date' => $this->day(2)]);
+
+        $this->book($room)->assertSessionHasNoErrors();
+    }
+
+    public function test_room_in_maintenance_cannot_be_booked(): void
+    {
+        $this->book($this->room('maintenance'))->assertSessionHasErrors('room_id');
     }
 
     public function test_one_night_amount_for_three_nights_is_rejected(): void

@@ -84,7 +84,7 @@ class GuestController extends Controller
     public function destroy(string $guest_id)
     {
         $guest = Guest::findOrFail($guest_id);
-        $active = ['confirmed', 'checked_in'];
+        $active = ['checked_in'];
 
         DB::transaction(function () use ($guest, $active) {
             $roomIds = Reservation::where('guest_id', $guest->id)->whereIn('status', $active)->pluck('room_id');
