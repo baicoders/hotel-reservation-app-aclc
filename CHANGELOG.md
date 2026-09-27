@@ -9,6 +9,7 @@
 - Forms that save data disable their button and show "Saving..." once submitted, so a double click cannot submit twice.
 - The home page shows the system title over the ACLC building with Reserve a room and Manage, and the version in the footer when APP_VERSION is set.
 - The login page has a clear error under the Username field, keeps the typed username, and shows Signing in while it submits. The 404 page links home and to the room browser.
+- The guest room browser lists available rooms in pages of 12 with a room type filter, a price sort, and View details and Reserve on each card, inside a new public layout.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag and Details, Edit and Delete actions.
@@ -36,6 +37,7 @@
 - The guest page Reserve Room button pointed to a page that does not exist; Book a room now opens the room browser.
 - A failed login reported its error on an email field the form does not have; it now appears under Username.
 - Signed in staff who open /login go straight to the dashboard.
+- The guest room browser stopped at 50 rooms; every available room is now reachable through the pager.
 - Typing % or _ into the reservations, rooms or guests search matched every row; those characters now match literally.
 
 ### Security

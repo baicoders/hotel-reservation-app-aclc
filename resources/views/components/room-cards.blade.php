@@ -25,6 +25,11 @@
             <a href="{{ $href }}" class="text-lobby-700 after:absolute after:inset-0 group-hover:underline">
                 View details<span class="sr-only"> for room {{ $roomNumber }}</span>
             </a>
+            @if ($isGuest ?? false)
+                <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room_id }}" class="btn btn-primary relative z-10 px-3 py-1.5">
+                    Reserve<span class="sr-only"> room {{ $roomNumber }}</span>
+                </a>
+            @endif
             @unless ($isGuest ?? false)
                 @php $count = $reservationCount ?? 0; @endphp
                 <div class="relative z-10 flex items-center gap-4">

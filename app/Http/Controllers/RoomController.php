@@ -38,17 +38,21 @@ class RoomController extends Controller
     }
 
     // list of room to reserve for the guest
-    public function listRooms()
+    public function listRooms(Request $request)
     {
-        //
-        $rooms = Room::whereRaw('LOWER(status) = ?', ['available'])
-            ->limit(50)
-            ->with('firstPhoto')
-            ->latest('created_at')
-            ->get();
-        // $rooms = Room::where('status', 'available')->with('firstPhoto')->latest('created_at')->get();
-        // dd($rooms);
-        return view('guest.search-rooms', compact('rooms'));
+        $available = fn () => Room::whereRaw('LOWER(status) = ?', ['available']);
+        $types = $available()->orderBy('rm_type')->distinct()->pluck('rm_type');
+        $type = $types->contains($request->input('type')) ? $request->input('type') : null;
+        $sort = in_array($request->input('sort'), ['price_asc', 'price_desc'], true) ? $request->input('sort') : null;
+
+        $rooms = $available()->with('firstPhoto')
+            ->when($type, fn ($rooms) => $rooms->where('rm_type', $type))
+            ->when($sort, fn ($rooms) => $rooms->orderBy('rm_price_per_night', $sort === 'price_asc' ? 'asc' : 'desc'))
+            ->orderByRaw('LENGTH(rm_number), rm_number')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('guest.search-rooms', compact('rooms', 'types', 'type', 'sort'));
     }
     public function search(Request $request)
     {
