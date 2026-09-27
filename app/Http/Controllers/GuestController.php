@@ -4,18 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\Guest;
 use App\Models\Reservation;
+use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $guests = Guest::latest()->take(50)->get();
-        return view('staff.guest.list', compact('guests'));
+        $query = is_string($request->input('query')) ? trim($request->input('query')) : '';
+
+        $guests = Guest::withCount('reservations')
+            ->when($query !== '', fn ($guests) => $guests->where(fn ($match) => $match
+                ->where('full_name', 'like', '%' . $query . '%')
+                ->orWhere('email', 'like', '%' . $query . '%')))
+            ->latest()
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('staff.guest.list', compact('guests', 'query'));
     }
 
     /**
@@ -73,14 +84,20 @@ class GuestController extends Controller
      */
     public function destroy(string $guest_id)
     {
-        //
-        // Delete all reservations associated with the guest
-        // Reservation::where('guest_id', $guest_id)->delete();
+        $guest = Guest::findOrFail($guest_id);
+        $active = ['confirmed', 'checked_in'];
 
-        // Delete the guest record
-        Guest::destroy($guest_id);
+        DB::transaction(function () use ($guest, $active) {
+            $roomIds = Reservation::where('guest_id', $guest->id)->whereIn('status', $active)->pluck('room_id');
+            $stillHeld = Reservation::whereIn('room_id', $roomIds)
+                ->where('guest_id', '!=', $guest->id)
+                ->whereIn('status', $active)
+                ->pluck('room_id');
 
-        // Redirect back with a success message
+            Room::whereKey($roomIds->diff($stillHeld))->whereRaw('LOWER(status) = ?', ['unavailable'])->update(['status' => 'available']);
+            $guest->delete();
+        });
+
         return redirect('/guest')->with('success', 'Guest and related reservations deleted successfully.');
     }
 }
