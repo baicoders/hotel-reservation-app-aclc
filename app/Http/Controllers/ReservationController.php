@@ -6,11 +6,15 @@ use App\Models\Guest;
 use App\Models\Payment;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use \App\Models\Room;
 
 class ReservationController extends Controller
 {
+    private const MAX_NIGHTS = 30;
+
     /**
      * Display a listing of the resource.
      */
@@ -52,61 +56,77 @@ class ReservationController extends Controller
     // reserving a room for the guest
     public function reserveRoomForm(Request $request)
     {
-        $room = $request->room_id ? Room::findOrFail($request->room_id) : null;
+        $room = Room::find($request->input('room_id'));
+
+        if (! $room) {
+            return redirect('/search-room');
+        }
+
+        if (strtolower($room->status) !== 'available') {
+            return redirect('/guest/rooms/details/' . $room->id)->with('error', 'This room is no longer available.');
+        }
 
         return view('guest.reserved-room-form', compact('room'));
     }
+
     public function reserveRoom(Request $request)
     {
         $validatedData = $request->validate([
-            'room_id' => 'required',
+            'room_id' => 'required|integer',
+            'check_in_date' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'check_out_date' => 'required|date_format:Y-m-d|after:check_in_date',
 
-            'name' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'address' => 'required',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:30',
+            'address' => 'required|string|max:255',
 
-            'amount' => 'required',
-            'payment_method' => 'required',
-            'payment_date' => 'required|date',
+            'amount' => 'required|numeric|min:0',
+            'payment_method' => 'required|in:credit_card,debit_card,paypal,cash',
+            'payment_date' => 'required|date|before_or_equal:today',
+        ], [
+            'check_in_date.after_or_equal' => 'The check in date cannot be in the past.',
+            'check_out_date.after' => 'The check out date must be after the check in date.',
         ]);
 
         $room = Room::findOrFail($validatedData['room_id']);
+        $checkIn = Carbon::parse($validatedData['check_in_date']);
+        $checkOut = Carbon::parse($validatedData['check_out_date']);
+        $nights = (int) $checkIn->diffInDays($checkOut);
 
-        if (strtolower($room->status) !== 'available') {
-            return redirect()->back()->withErrors(['room_id' => 'This room is no longer available.'])->withInput();
+        if ($nights > self::MAX_NIGHTS) {
+            throw ValidationException::withMessages(['check_out_date' => 'A stay can be at most ' . self::MAX_NIGHTS . ' nights.']);
         }
 
-        if ((float) $validatedData['amount'] !== (float) $room->rm_price_per_night) {
-            return redirect()->back()->withErrors(['amount' => 'Amount must equal the room price.'])->withInput();
-        }
-        $guest = (object) [
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'phone' => $validatedData['phone'],
-            'address' => $validatedData['address'],
-        ];
-        $payment = (object) [
-            'amount' => $validatedData['amount'],
-            'payment_method' => $validatedData['payment_method'],
-            'payment_date' => $validatedData['payment_date'],
-        ];
+        $total = round($room->rm_price_per_night * $nights, 2);
 
-        [$existingGuest, $reservation] = DB::transaction(function () use ($guest, $payment, $room) {
+        if (round((float) $validatedData['amount'], 2) !== $total) {
+            throw ValidationException::withMessages(['amount' => 'The amount must equal the total of $' . number_format($total, 2) . '.']);
+        }
+
+        [$reservation, $payment] = DB::transaction(function () use ($validatedData, $room, $checkIn, $checkOut, $total) {
             $room = Room::query()->lockForUpdate()->findOrFail($room->id);
 
             if (strtolower($room->status) !== 'available') {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'room_id' => 'This room is no longer available.',
-                ]);
+                throw ValidationException::withMessages(['room_id' => 'This room is no longer available.']);
             }
 
-            $existingGuest = Guest::firstOrCreate(
-                ['email' => $guest->email],
+            $overlaps = Reservation::where('room_id', $room->id)
+                ->whereIn('status', ['pending', 'confirmed', 'checked_in'])
+                ->whereDate('check_in_date', '<', $checkOut)
+                ->whereDate('check_out_date', '>', $checkIn)
+                ->exists();
+
+            if ($overlaps) {
+                throw ValidationException::withMessages(['check_in_date' => 'This room is already booked for some of these dates.']);
+            }
+
+            $guest = Guest::firstOrCreate(
+                ['email' => $validatedData['email']],
                 [
-                    'full_name' => $guest->name,
-                    'phone_number' => $guest->phone,
-                    'address' => $guest->address,
+                    'full_name' => $validatedData['name'],
+                    'phone_number' => $validatedData['phone'],
+                    'address' => $validatedData['address'],
                 ]
             );
 
@@ -114,24 +134,31 @@ class ReservationController extends Controller
 
             $reservation = Reservation::create([
                 'room_id' => $room->id,
-                'guest_id' => $existingGuest->id,
-                'check_in_date' => now(),
-                'check_out_date' => now()->addDay(),
+                'guest_id' => $guest->id,
+                'check_in_date' => $checkIn->toDateString(),
+                'check_out_date' => $checkOut->toDateString(),
                 'status' => 'confirmed',
             ]);
 
-            Payment::create([
+            $payment = Payment::create([
                 'reservation_id' => $reservation->id,
-                'amount' => $payment->amount,
-                'payment_method' => $payment->payment_method,
-                'payment_date' => $payment->payment_date,
+                'amount' => $total,
+                'payment_method' => $validatedData['payment_method'],
+                'payment_date' => $validatedData['payment_date'],
                 'status' => 'paid',
             ]);
 
-            return [$existingGuest, $reservation];
+            return [$reservation, $payment];
         });
 
-        return view('guest.receipt-page', compact('room', 'guest', 'payment'));
+        $guest = (object) [
+            'full_name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'phone_number' => $validatedData['phone'],
+            'address' => $validatedData['address'],
+        ];
+
+        return view('guest.receipt-page', compact('room', 'guest', 'reservation', 'payment', 'nights'));
     }
 
     // public function reserveRoomForm_Get1(Request $request)

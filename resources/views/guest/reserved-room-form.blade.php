@@ -30,6 +30,18 @@
                     </div>
 
                     <div>
+                        <label for="check_in_date" class="block font-semibold">Check in</label>
+                        <input type="date" name="check_in_date" id="check_in_date" min="{{ date('Y-m-d') }}"
+                            class="w-full p-2 border border-gray-300 rounded-xl" value="{{ old('check_in_date', date('Y-m-d')) }}" required>
+                    </div>
+
+                    <div>
+                        <label for="check_out_date" class="block font-semibold">Check out</label>
+                        <input type="date" name="check_out_date" id="check_out_date" min="{{ now()->addDay()->format('Y-m-d') }}"
+                            class="w-full p-2 border border-gray-300 rounded-xl" value="{{ old('check_out_date', now()->addDay()->format('Y-m-d')) }}" required>
+                    </div>
+
+                    <div>
                         <label for="name" class="block font-semibold">Name</label>
                         <input type="text" name="name" id="name"
                             class="w-full p-2 border border-gray-300 rounded-xl" value="{{ old('name') }}" required>
@@ -55,7 +67,7 @@
 
                     {{-- payment details --}}
                     <div>
-                        <label for="amount" class="block font-semibold">Amount</label>
+                        <label for="amount" class="block font-semibold">Amount (nightly rate times nights)</label>
                         <input type="number" name="amount" id="amount" value="{{ old('amount', $room->rm_price_per_night) }}"
                             class="w-full p-2 border border-gray-300 rounded-xl" min="0" step="0.01" required>
                     </div>

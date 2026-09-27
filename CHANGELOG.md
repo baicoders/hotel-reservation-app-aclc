@@ -11,6 +11,7 @@
 - The login page has a clear error under the Username field, keeps the typed username, and shows Signing in while it submits. The 404 page links home and to the room browser.
 - The guest room browser lists available rooms in pages of 12 with a room type filter, a price sort, and View details and Reserve on each card, inside a new public layout.
 - The guest room page shows the room details, a gallery of every photo, Reserve and Back, and says plainly when a room cannot be booked. It shares its gallery with the staff room page.
+- Guests choose check in and check out dates when booking; the total is the nightly rate times the nights, stays run up to 30 nights, and the receipt shows the stay and the total paid.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag and Details, Edit and Delete actions.
@@ -41,6 +42,10 @@
 - Signed in staff who open /login go straight to the dashboard.
 - The guest room browser stopped at 50 rooms; every available room is now reachable through the pager.
 - Typing % or _ into the reservations, rooms or guests search matched every row; those characters now match literally.
+
+- Bookings were fixed at one night starting today; they now use the chosen dates.
+- A room can no longer be booked twice for overlapping dates: the booking rechecks confirmed, checked in and pending reservations inside its transaction.
+- The booking form crashed without a room and opened for rooms that cannot be booked; it now returns to the room browser or the room page.
 
 ### Security
 - Uploaded room photos are stored under a name and extension taken from the file content, not the uploaded file name, so an image renamed to .html can no longer be served as a web page.

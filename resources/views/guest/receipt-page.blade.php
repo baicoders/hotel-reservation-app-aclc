@@ -19,24 +19,24 @@
                 </div>
                 <div class="bg-white rounded-b-xl p-4 basis-auto">
                     <h2 class="text-xl font-bold col-span-2">Receipt</h2>
-                    <p>Thank you, {{ $guest->name }}, for your reservation!</p>
+                    <p>Thank you, {{ $guest->full_name }}, for your reservation!</p>
                     <p>A confirmation email has been sent to {{ $guest->email }}.</p>
                     <p class="text-gray-500">Note! the email confirmation is in development it will not send a confirmation email.</p>
                     <br>
                     <h3 class="text-lg font-semibold">Reservation Details:</h3>
                     <p>Room Number: {{ $room->rm_number }}</p>
                     <p>Room Type: {{ $room->rm_type }}</p>
-                    <p>Price per Night: ${{ $room->rm_price_per_night }}</p>
+                    <p>Price per Night: ${{ number_format($room->rm_price_per_night, 2) }}</p>
+                    <p>Stay: {{ $reservation->check_in_date }} to {{ $reservation->check_out_date }} ({{ $nights }} {{ Str::plural('night', $nights) }})</p>
                     <br>
                     <h3 class="text-lg font-semibold">Guest Details:</h3>
-                    <p>Name: {{ $guest->name }}</p>
+                    <p>Name: {{ $guest->full_name }}</p>
                     <p>Email: {{ $guest->email }}</p>
-                    <p>Phone: {{ $guest->phone }}</p>
+                    <p>Phone: {{ $guest->phone_number }}</p>
                     <p>Address: {{ $guest->address }}</p>
                     <br>
                     <h3 class="text-lg font-semibold">Payment Details:</h3>
-                    <p>Amount: ${{ $payment->amount }}</p>
-                    <p>Change: ${{ $payment->amount - $room->rm_price_per_night }}</p>
+                    <p>Total paid: ${{ number_format($payment->amount, 2) }}</p>
                     <p>Payment Method: {{ $payment->payment_method }}</p>
                     <p>Payment Date: {{ $payment->payment_date }}</p>
                 </div>
