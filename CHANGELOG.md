@@ -10,6 +10,7 @@
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, and new guests.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag.
 - Add room and Edit room share one form with errors under each field, photo previews before upload, and photos can be added when editing. Saving an edit returns to the room info page.
+- The room info page has a photo gallery with Previous and Next, the room details under a large key tag, every reservation for the room with links, and a Book this room action for available rooms.
 
 ### Fixed
 - Pages no longer print markup before the doctype, which forced browsers into quirks mode.
@@ -19,6 +20,8 @@
 - Room photos that are missing or fail to load show "No photo yet" instead of a broken image.
 - Whole number prices such as "100" are accepted when adding or editing a room.
 - An invalid photo no longer leaves a half saved room behind; the room is only created once every photo passes validation.
+- Deleting a room now warns how many reservations and payments are deleted with it.
+- The room info page listed only confirmed reservations; checked in, checked out and cancelled stays now show too.
 
 ### Security
 - Uploaded room photos are stored under a name and extension taken from the file content, not the uploaded file name, so an image renamed to .html can no longer be served as a web page.

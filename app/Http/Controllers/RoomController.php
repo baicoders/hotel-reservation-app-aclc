@@ -154,14 +154,12 @@ class RoomController extends Controller
      */
     public function show(string $room_id)
     {
-        //
         $room = Room::where('id', $room_id)->firstOrFail();
 
-        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->get();
+        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->orderBy('id')->get();
         $room->images = $photos;
 
         $reservations = Reservation::where('room_id', $room_id)
-            ->where('status', 'confirmed')
             ->join('guests', 'reservations.guest_id', '=', 'guests.id')
             ->select('reservations.*', 'guests.full_name as guest_name', 'guests.email as guest_email')
             ->latest('reservations.created_at')
