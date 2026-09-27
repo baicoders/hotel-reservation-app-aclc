@@ -174,10 +174,9 @@ class RoomController extends Controller
     // show the details of the room to reserve for the guest
     public function reserveRoom(string $room_id)
     {
-        //
         $room = Room::where('id', $room_id)->firstOrFail();
-        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->get();
-        $room->images = $photos;
+        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->orderBy('id')->get();
+
         return view('guest.room-details', compact('room', 'photos'));
     }
 

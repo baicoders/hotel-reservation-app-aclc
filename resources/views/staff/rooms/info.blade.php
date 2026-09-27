@@ -11,32 +11,9 @@
 @endsection
 
 @section('page')
-    @php $count = count($room->images); @endphp
     <div class="grid gap-6 lg:grid-cols-5">
         <section class="card overflow-hidden lg:col-span-3" aria-label="Photos">
-            @if ($count)
-                <div id="gallery" class="flex aspect-[4/3] snap-x snap-mandatory overflow-x-auto scroll-smooth">
-                    @foreach ($room->images as $image)
-                        <div class="relative w-full shrink-0 snap-start bg-lobby-50">
-                            <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center text-sm text-muted">Photo unavailable</span>
-                            <img src="{{ asset('storage/' . $image->photo_path) }}" alt="Room {{ $room->rm_number }}, photo {{ $loop->iteration }} of {{ $count }}"
-                                onerror="this.previousElementSibling.removeAttribute('aria-hidden'); this.remove()" class="absolute inset-0 size-full object-cover">
-                        </div>
-                    @endforeach
-                </div>
-                @if ($count > 1)
-                    <div class="flex items-center justify-between border-t border-line px-4 py-3">
-                        <button type="button" data-gallery-step="-1" class="btn btn-secondary">Previous</button>
-                        <p id="gallery-counter" class="text-sm text-muted" aria-live="polite">Photo 1 of {{ $count }}</p>
-                        <button type="button" data-gallery-step="1" class="btn btn-secondary">Next</button>
-                    </div>
-                @endif
-            @else
-                <div class="flex aspect-[4/3] flex-col items-center justify-center gap-2 bg-lobby-50 text-center">
-                    <p class="font-semibold">No photos yet</p>
-                    <a href="{{ url('/rooms/edit/' . $room->id) }}" class="text-sm font-semibold text-lobby-700 hover:underline">Add photos</a>
-                </div>
-            @endif
+            @include('components.room-gallery', ['images' => $room->images, 'roomNumber' => $room->rm_number, 'emptyLink' => url('/rooms/edit/' . $room->id)])
         </section>
 
         <section class="card p-6 lg:col-span-2">
@@ -90,29 +67,4 @@
             </ul>
         @endif
     </section>
-@endsection
-
-@section('scripts')
-    <script>
-        (() => {
-            const gallery = document.getElementById('gallery');
-            const counter = document.getElementById('gallery-counter');
-            if (!gallery || !counter) return;
-            const total = gallery.children.length;
-            const current = () => Math.round(gallery.scrollLeft / gallery.clientWidth);
-            document.querySelectorAll('[data-gallery-step]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    const next = (current() + Number(button.dataset.galleryStep) + total) % total;
-                    const wraps = Math.abs(next - current()) > 1;
-                    gallery.scrollTo({ left: next * gallery.clientWidth, behavior: wraps ? 'instant' : 'smooth' });
-                });
-            });
-            let shown = 0;
-            gallery.addEventListener('scroll', () => {
-                if (current() === shown) return;
-                shown = current();
-                counter.textContent = `Photo ${shown + 1} of ${total}`;
-            });
-        })();
-    </script>
 @endsection
