@@ -58,6 +58,15 @@ class RoomListTest extends TestCase
             ->assertOk();
     }
 
+    public function test_underscore_in_search_is_literal(): void
+    {
+        Room::factory()->create(['rm_number' => '101']);
+
+        $this->actingAs($this->staff())
+            ->get('/rooms?query=_')
+            ->assertViewHas('rooms', fn ($rooms) => $rooms->total() === 0);
+    }
+
     public function test_search_keeps_the_typed_query(): void
     {
         $this->actingAs($this->staff())

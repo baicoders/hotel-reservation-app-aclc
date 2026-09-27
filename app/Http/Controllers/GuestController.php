@@ -19,8 +19,8 @@ class GuestController extends Controller
 
         $guests = Guest::withCount('reservations')
             ->when($query !== '', fn ($guests) => $guests->where(fn ($match) => $match
-                ->where('full_name', 'like', '%' . $query . '%')
-                ->orWhere('email', 'like', '%' . $query . '%')))
+                ->where('full_name', 'like', '%' . addcslashes($query, '\\%_') . '%')
+                ->orWhere('email', 'like', '%' . addcslashes($query, '\\%_') . '%')))
             ->latest()
             ->latest('id')
             ->paginate(20)

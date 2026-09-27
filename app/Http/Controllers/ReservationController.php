@@ -18,17 +18,27 @@ class ReservationController extends Controller
     {
         $statuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
         $status = in_array($request->input('status'), $statuses, true) ? $request->input('status') : null;
+        $text = fn ($key) => is_string($request->input($key)) ? trim($request->input($key)) : '';
+        $filters = ['guest' => $text('guest'), 'room' => $text('room'), 'date' => $text('date')];
+        $like = fn ($value) => '%' . addcslashes($value, '\\%_') . '%';
+        $date = \DateTime::createFromFormat('!Y-m-d', $filters['date']);
+        $date = $date && $date->format('Y-m-d') === $filters['date'] ? $filters['date'] : null;
 
         $reservations = Reservation::join('guests', 'reservations.guest_id', '=', 'guests.id')
             ->join('rooms', 'reservations.room_id', '=', 'rooms.id')
             ->select('reservations.*', 'guests.full_name as guest_name', 'rooms.rm_number as room_number', 'rooms.rm_type as room_type')
             ->when($status, fn ($query) => $query->whereIn('reservations.status', $status === 'cancelled' ? ['cancelled', 'canceled'] : [$status]))
+            ->when($filters['guest'] !== '', fn ($query) => $query->where(fn ($match) => $match
+                ->where('guests.full_name', 'like', $like($filters['guest']))
+                ->orWhere('guests.email', 'like', $like($filters['guest']))))
+            ->when($filters['room'] !== '', fn ($query) => $query->where('rooms.rm_number', 'like', $like($filters['room'])))
+            ->when($date, fn ($query) => $query->whereDate('reservations.check_in_date', '<=', $date)->whereDate('reservations.check_out_date', '>=', $date))
             ->latest('reservations.created_at')
             ->latest('reservations.id')
             ->paginate(15)
             ->withQueryString();
 
-        return view('staff.reservations.list', compact('reservations', 'statuses', 'status'));
+        return view('staff.reservations.list', compact('reservations', 'statuses', 'status', 'filters'));
     }
 
     /**

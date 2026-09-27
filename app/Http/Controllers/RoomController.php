@@ -27,8 +27,8 @@ class RoomController extends Controller
 
         $rooms = Room::with('firstPhoto')
             ->when($query !== '', fn ($rooms) => $rooms->where(fn ($match) => $match
-                ->where('rm_number', 'like', '%' . $query . '%')
-                ->orWhere('rm_type', 'like', '%' . $query . '%')))
+                ->where('rm_number', 'like', '%' . addcslashes($query, '\\%_') . '%')
+                ->orWhere('rm_type', 'like', '%' . addcslashes($query, '\\%_') . '%')))
             ->when($status, fn ($rooms) => $rooms->whereRaw('LOWER(status) = ?', [$status]))
             ->orderByRaw('LENGTH(rm_number), rm_number')
             ->paginate(12)

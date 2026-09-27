@@ -26,7 +26,8 @@ class ManageController extends Controller
             ->get();
         $latestGuests = Guest::latest()->take(5)->get();
         $unavailableRooms = Room::whereRaw('LOWER(status) != ?', ['available'])->orderBy('rm_number')->take(8)->get();
+        $latestRooms = Room::latest()->latest('id')->take(5)->get();
 
-        return view('staff.dashboard', compact('stats', 'latestReservations', 'latestGuests', 'unavailableRooms'));
+        return view('staff.dashboard', compact('stats', 'latestReservations', 'latestGuests', 'unavailableRooms', 'latestRooms'));
     }
 }

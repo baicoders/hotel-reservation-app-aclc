@@ -7,11 +7,11 @@
 - Flash messages show both success and error notices in one stack; each stays until dismissed.
 - The confirm dialog uses the native dialog element: Escape closes it and focus starts on Cancel.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
-- The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, and new guests.
+- The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag.
 - Add room and Edit room share one form with errors under each field, photo previews before upload, and photos can be added when editing. Saving an edit returns to the room info page.
 - The room info page has a photo gallery with Previous and Next, the room details under a large key tag, every reservation for the room with links, and a Book this room action for available rooms.
-- The reservations list has status filters, room numbers and stay dates, and pages of 15. The reservation page shows the guest, the room with links to both, the payment, and a status update whose confirmation names the new status.
+- The reservations list shows the reservation ID, room number and stay dates, filters by status, guest, room and a date the guest is staying, and pages of 15. The reservation page shows the guest, the room with links to both, the payment, and a status update whose confirmation names the new status.
 - The guest list shows name, email, phone, address and date added, with a name or email search, pages of 20, and Open details and Delete on each row.
 - The guest page shows the profile, every reservation with its room and both statuses, and a Delete guest action that states the reservation count.
 
@@ -31,6 +31,7 @@
 - Deleting a guest makes the rooms their confirmed or checked in reservations held available again, unless another guest still holds the room. The confirmation states how many reservations go with the guest.
 - The guest page showed the room status and room id in place of the reservation status and id; it now shows both statuses and links to the right reservation.
 - The guest page Reserve Room button pointed to a page that does not exist; Book a room now opens the room browser.
+- Typing % or _ into the reservations, rooms or guests search matched every row; those characters now match literally.
 
 ### Security
 - Uploaded room photos are stored under a name and extension taken from the file content, not the uploaded file name, so an image renamed to .html can no longer be served as a web page.

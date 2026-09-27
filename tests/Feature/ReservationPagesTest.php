@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Guest;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Room;
@@ -43,6 +44,68 @@ class ReservationPagesTest extends TestCase
         $this->actingAs($this->staff())
             ->get('/reservations?status=cancelled')
             ->assertViewHas('reservations', fn ($page) => $this->ids($page) === [$a->id, $b->id]);
+    }
+
+    public function test_list_shows_the_reservation_id(): void
+    {
+        $reservation = Reservation::factory()->create();
+
+        $this->actingAs($this->staff())->get('/reservations')->assertSee('>#' . $reservation->id . '<', false);
+    }
+
+    public function test_guest_filter_matches_name_or_email(): void
+    {
+        $match = Reservation::factory()->create(['guest_id' => Guest::factory()->create(['email' => 'lena.cruz@example.com'])->id]);
+        Reservation::factory()->create();
+
+        $this->actingAs($this->staff())
+            ->get('/reservations?guest=lena')
+            ->assertViewHas('reservations', fn ($page) => $this->ids($page) === [$match->id]);
+    }
+
+    public function test_room_filter_matches_room_number(): void
+    {
+        $match = Reservation::factory()->create(['room_id' => Room::factory()->create(['rm_number' => '305'])->id]);
+        Reservation::factory()->create(['room_id' => Room::factory()->create(['rm_number' => '410'])->id]);
+
+        $this->actingAs($this->staff())
+            ->get('/reservations?room=305')
+            ->assertViewHas('reservations', fn ($page) => $this->ids($page) === [$match->id]);
+    }
+
+    public function test_date_filter_matches_stays_covering_the_date(): void
+    {
+        $match = Reservation::factory()->create(['check_in_date' => '2026-10-03', 'check_out_date' => '2026-10-06']);
+        Reservation::factory()->create(['check_in_date' => '2026-10-07', 'check_out_date' => '2026-10-09']);
+
+        $this->actingAs($this->staff())
+            ->get('/reservations?date=2026-10-05')
+            ->assertViewHas('reservations', fn ($page) => $this->ids($page) === [$match->id]);
+    }
+
+    public function test_percent_sign_in_guest_filter_is_literal(): void
+    {
+        Reservation::factory()->create();
+
+        $this->actingAs($this->staff())
+            ->get('/reservations?guest=%25')
+            ->assertViewHas('reservations', fn ($page) => count($page->items()) === 0);
+    }
+
+    public function test_invalid_date_is_ignored(): void
+    {
+        Reservation::factory()->count(2)->create();
+
+        $this->actingAs($this->staff())
+            ->get('/reservations?date=not-a-date')
+            ->assertViewHas('reservations', fn ($page) => count($page->items()) === 2);
+    }
+
+    public function test_filters_stay_in_the_form(): void
+    {
+        $this->actingAs($this->staff())
+            ->get('/reservations?guest=lena&room=305')
+            ->assertSee('value="lena"', false);
     }
 
     public function test_detail_shows_the_payment(): void

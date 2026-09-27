@@ -51,6 +51,15 @@ class GuestListTest extends TestCase
             ->assertViewHas('guests', fn ($page) => $this->ids($page) === [$match->id]);
     }
 
+    public function test_percent_sign_in_search_is_literal(): void
+    {
+        Guest::factory()->create();
+
+        $this->actingAs($this->staff())
+            ->get('/guest?query=%25')
+            ->assertViewHas('guests', fn ($page) => $page->total() === 0);
+    }
+
     public function test_search_keeps_the_typed_query(): void
     {
         $this->actingAs($this->staff())->get('/guest?query=lena')->assertSee('value="lena"', false);

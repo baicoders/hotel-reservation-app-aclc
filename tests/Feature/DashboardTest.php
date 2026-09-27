@@ -72,6 +72,24 @@ class DashboardTest extends TestCase
             ->assertViewHas('unavailableRooms', fn ($rooms) => $rooms->pluck('rm_number')->all() === ['M-1']);
     }
 
+    public function test_latest_rooms_lists_the_five_newest(): void
+    {
+        foreach (range(1, 7) as $days) {
+            Room::factory()->create(['rm_number' => 'N' . $days, 'created_at' => now()->subDays($days)]);
+        }
+
+        $this->actingAs(User::factory()->create())
+            ->get('/dashboard')
+            ->assertViewHas('latestRooms', fn ($rooms) => $rooms->pluck('rm_number')->all() === ['N1', 'N2', 'N3', 'N4', 'N5']);
+    }
+
+    public function test_dashboard_offers_refresh(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get('/dashboard')
+            ->assertSee('Refresh');
+    }
+
     public function test_dashboard_link_is_marked_as_current_page(): void
     {
         $this->actingAs(User::factory()->create())
