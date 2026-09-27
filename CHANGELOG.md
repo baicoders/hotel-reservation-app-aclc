@@ -11,6 +11,7 @@
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag.
 - Add room and Edit room share one form with errors under each field, photo previews before upload, and photos can be added when editing. Saving an edit returns to the room info page.
 - The room info page has a photo gallery with Previous and Next, the room details under a large key tag, every reservation for the room with links, and a Book this room action for available rooms.
+- The reservations list has status filters, room numbers and stay dates, and pages of 15. The reservation page shows the guest, the room with links to both, the payment, and a status update whose confirmation names the new status.
 
 ### Fixed
 - Pages no longer print markup before the doctype, which forced browsers into quirks mode.
@@ -22,6 +23,8 @@
 - An invalid photo no longer leaves a half saved room behind; the room is only created once every photo passes validation.
 - Deleting a room now warns how many reservations and payments are deleted with it.
 - The room info page listed only confirmed reservations; checked in, checked out and cancelled stays now show too.
+- The reservations list stopped at 50; every reservation is now reachable through the pager.
+- The reservation page loaded the payment but never showed it.
 
 ### Security
 - Uploaded room photos are stored under a name and extension taken from the file content, not the uploaded file name, so an image renamed to .html can no longer be served as a web page.

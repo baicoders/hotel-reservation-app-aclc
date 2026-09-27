@@ -14,17 +14,21 @@ class ReservationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $statuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
+        $status = in_array($request->input('status'), $statuses, true) ? $request->input('status') : null;
+
         $reservations = Reservation::join('guests', 'reservations.guest_id', '=', 'guests.id')
             ->join('rooms', 'reservations.room_id', '=', 'rooms.id')
             ->select('reservations.*', 'guests.full_name as guest_name', 'rooms.rm_number as room_number', 'rooms.rm_type as room_type')
+            ->when($status, fn ($query) => $query->whereIn('reservations.status', $status === 'cancelled' ? ['cancelled', 'canceled'] : [$status]))
             ->latest('reservations.created_at')
-            ->take(50)
-            ->get();
-        // dd('reservations', $reservations->toArray());
-        return view('staff.reservations.list', compact('reservations'));
+            ->latest('reservations.id')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('staff.reservations.list', compact('reservations', 'statuses', 'status'));
     }
 
     /**
