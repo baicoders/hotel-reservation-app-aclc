@@ -1,85 +1,17 @@
-@extends('layout.app')
+@extends('layout.staff')
 
-@section('content')
-    <div class=" bg-gray-300 h-screen p-4">
-        <div class="flex flex-row gap-4 h-full">
-            {{-- sidebar --}}
-            @include('components.sidebar')
+@section('title', 'Add room')
+@section('eyebrow', 'Rooms')
 
-            {{-- content --}}
-            <div class="flex flex-col gap-4 h-full basis-full">
-                <div class="bg-white rounded-xl p-4 basis-auto">
-                    Create New Room
-                </div>
-
-                <div class="basis-full flex flex-col h-full">
-                    <div class="bg-gray-200 rounded-t-xl p-4 h-full basis-full">
-                        Img
-                    </div>
-
-                    <form action="{{ url('/rooms/record') }}" id="createRoomForm" method="post" class="bg-white rounded-b-xl p-4 basis-auto" enctype="multipart/form-data">
-                        @csrf
-                        <div class="grid grid-cols-2 gap-2">
-                            {{-- input for adding room photos --}}
-                            <div class="flex flex-col gap-1 col-span-full">
-                                <label for="roomPhotos" class="font-bold">Room Photos</label>
-                                <input type="file" id="roomPhotos" name="roomPhotos[]" multiple accept="image/*"
-                                    class="border border-gray-300 rounded-xl p-2 w-full" />
-                            </div>
-
-                            <div class="flex flex-col gap-1">
-                                <label for="roomNumber" class="font-bold">Room Number</label>
-                                <input type="text" id="roomNumber" name="roomNumber" value="{{ old('roomNumber') }}"
-                                    required
-                                    class="border border-gray-300 rounded-xl p-2 w-full" />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label for="roomType" class="font-bold">Room Type</label>
-                                <input type="text" id="roomType" name="roomType" value="{{ old('roomType') }}"
-                                    required
-                                    class="border border-gray-300 rounded-xl p-2 w-full" />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label for="roomPrice" class="font-bold">Room Price</label>
-                                <input type="number" id="roomPrice" name="roomPrice" value="{{ old('roomPrice') }}"
-                                    min="0" step="0.01" required
-                                    class="border border-gray-300 rounded-xl p-2 w-full" />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label for="status" class="font-bold">Status</label>
-                                <select id="status" name="status" class="border border-gray-300 rounded-xl p-2 w-full">
-                                    <option value="available" {{ old('status', 'available') === 'available' ? 'selected' : '' }}>Available</option>
-                                    <option value="unavailable" {{ old('status') === 'unavailable' ? 'selected' : '' }}>Unavailable</option>
-                                    <option value="maintenance" {{ old('status') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="flex flex-row gap-4 basis-auto">
-                    <button type="submit" form="createRoomForm" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full text-center">
-                        Add New Room
-                    </button>
-                    {{-- <a href="{{ url('/rooms/store') }}" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full text-center">
-                        Add New Room
-                    </a> --}}
-                </div>
-            </div>
+@section('page')
+    <form action="{{ url('/rooms/record') }}" method="POST" enctype="multipart/form-data" class="card max-w-3xl">
+        @csrf
+        <div class="p-6">
+            @include('staff.rooms.form')
         </div>
-        <!-- Nothing worth having comes easy. - Theodore Roosevelt -->
-    </div>
+        <div class="flex flex-col-reverse gap-3 border-t border-line px-6 py-4 sm:flex-row sm:justify-end">
+            <a href="{{ url('/rooms') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Add room</button>
+        </div>
+    </form>
 @endsection
-
-@section('scripts')
-    <script>
-        // document.querySelector('a[href="{{ url('/rooms/store') }}"]').addEventListener('click', function(event) {
-        //     event.preventDefault(); // Prevent the default anchor behavior
-        //     document.getElementById('createRoomForm').submit(); // Submit the form
-        // });
-    </script>
-@endsection
-
-{{-- <div>
-    <!-- Happiness is not something readymade. It comes from your own actions. - Dalai Lama -->
-</div> --}}

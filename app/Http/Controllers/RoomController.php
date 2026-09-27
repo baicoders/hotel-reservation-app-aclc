@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class RoomController extends Controller
 {
+    private const ATTRIBUTES = [
+        'roomPrice' => 'price per night',
+        'roomPhotos.*' => 'photo',
+    ];
+
     /**
      * Display a listing of the resource.
      */
@@ -69,9 +74,11 @@ class RoomController extends Controller
         $validatedData = $request->validate([
             'roomNumber' => 'required|string|max:13|unique:rooms,rm_number',
             'roomType' => 'required|string|max:255',
-            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
+            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:0,2',
             'status' => 'nullable|in:available,unavailable,maintenance',
-        ]);
+            'roomPhotos' => 'nullable|array',
+            'roomPhotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:4096',
+        ], [], self::ATTRIBUTES);
 
         // Remove dd($validatedData);
 
@@ -109,8 +116,7 @@ class RoomController extends Controller
         ]);
 
         foreach ($request->file('roomPhotos') as $photo) {
-            $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
-            $path = $photo->storeAs('room-photos', $filename, 'public');
+            $path = $photo->store('room-photos', 'public');
 
             DB::table('rooms_photos')->insert([
                 'room_id' => $room->id,
@@ -131,8 +137,7 @@ class RoomController extends Controller
         ]);
 
         $photo = $request->file('roomPhotos');
-        $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
-        $path = $photo->storeAs('room-photos', $filename, 'public');
+        $path = $photo->store('room-photos', 'public');
 
         DB::table('rooms_photos')->insert([
             'room_id' => $room->id,
@@ -200,9 +205,11 @@ class RoomController extends Controller
         $validatedData = $request->validate([
             // 'roomNumber' => 'required|string|max:13|unique:rooms,rm_number,' . $room->rm_number,
             'roomType' => 'required|string|max:255',
-            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
+            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:0,2',
             'status' => 'nullable|in:available,unavailable,maintenance',
-        ]);
+            'roomPhotos' => 'nullable|array',
+            'roomPhotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:4096',
+        ], [], self::ATTRIBUTES);
 
         $room->update([
             // 'rm_number' => $validatedData['roomNumber'],
@@ -211,7 +218,11 @@ class RoomController extends Controller
             'status' => $validatedData['status'] ?? 'available',
         ]);
 
-        return redirect('/rooms')->with('success', 'Room is updated!');
+        if ($request->hasFile('roomPhotos')) {
+            $this->uploadPhoto($request, $room->id);
+        }
+
+        return redirect('/rooms/details/' . $room->id)->with('success', 'Room is updated!');
     }
 
     /**
