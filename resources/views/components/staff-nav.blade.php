@@ -27,7 +27,7 @@
     <div class="mt-auto border-t border-lobby-800 px-6 py-5">
         <p class="text-xs text-lobby-100/70">Signed in as</p>
         <p class="truncate text-sm font-semibold text-white">{{ auth()->user()?->name }}</p>
-        <form method="POST" action="{{ url('/logout') }}" class="mt-3">
+        <form method="POST" action="{{ url('/logout') }}" class="mt-3" data-busy-label="Signing out...">
             @csrf
             <button type="submit" class="text-sm font-semibold text-brass-400 underline-offset-2 hover:underline">
                 Sign out

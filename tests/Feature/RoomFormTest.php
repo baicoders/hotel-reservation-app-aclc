@@ -85,6 +85,21 @@ class RoomFormTest extends TestCase
         $this->assertStringEndsWith('.png', DB::table('rooms_photos')->where('room_id', $room->id)->value('photo_path'));
     }
 
+    public function test_deleting_a_room_removes_its_photo_files(): void
+    {
+        Storage::fake('public');
+        $this->actingAs($this->staff())->post('/rooms/record', [
+            'roomNumber' => '308', 'roomType' => 'Suite', 'roomPrice' => '250',
+            'roomPhotos' => [UploadedFile::fake()->image('a.jpg'), UploadedFile::fake()->image('b.jpg')],
+        ]);
+        $room = Room::where('rm_number', '308')->first();
+        $paths = DB::table('rooms_photos')->where('room_id', $room->id)->pluck('photo_path');
+
+        $this->actingAs($this->staff())->delete('/rooms/delete/' . $room->id);
+
+        $this->assertSame([], array_values(array_filter($paths->all(), fn ($path) => Storage::disk('public')->exists($path))));
+    }
+
     public function test_whole_number_price_updates_the_room(): void
     {
         $room = Room::factory()->create(['rm_price_per_night' => 90]);

@@ -21,8 +21,26 @@
         <p class="text-sm text-muted">
             <span class="text-lg font-semibold text-ink tabular-nums">${{ number_format((float) $roomPrice, 2) }}</span> per night
         </p>
-        <a href="{{ $href }}" class="mt-auto text-sm font-semibold text-lobby-700 after:absolute after:inset-0 group-hover:underline">
-            View details<span class="sr-only"> for room {{ $roomNumber }}</span>
-        </a>
+        <div class="mt-auto flex items-center justify-between gap-3 text-sm font-semibold">
+            <a href="{{ $href }}" class="text-lobby-700 after:absolute after:inset-0 group-hover:underline">
+                View details<span class="sr-only"> for room {{ $roomNumber }}</span>
+            </a>
+            @unless ($isGuest ?? false)
+                @php $count = $reservationCount ?? 0; @endphp
+                <div class="relative z-10 flex items-center gap-4">
+                    <a href="{{ url('/rooms/edit/' . $room_id) }}" class="text-lobby-700 hover:underline">
+                        Edit<span class="sr-only"> room {{ $roomNumber }}</span>
+                    </a>
+                    <form action="{{ url('/rooms/delete/' . $room_id) }}" method="POST" id="room_card_delete_{{ $room_id }}" data-busy-label="Deleting..."
+                        onsubmit="return handleFormSubmission(event, @js('Room ' . $roomNumber . ' and its ' . $count . ' ' . Str::plural('reservation', $count) . ', with their payments, will be deleted. This cannot be undone.'), @js('Delete room ' . $roomNumber . '?'), 'room_card_delete_{{ $room_id }}');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-brick-700 hover:underline">
+                            Delete<span class="sr-only"> room {{ $roomNumber }}</span>
+                        </button>
+                    </form>
+                </div>
+            @endunless
+        </div>
     </div>
 </article>

@@ -25,7 +25,7 @@ class RoomController extends Controller
             ? $request->input('status')
             : null;
 
-        $rooms = Room::with('firstPhoto')
+        $rooms = Room::with('firstPhoto')->withCount('reservations')
             ->when($query !== '', fn ($rooms) => $rooms->where(fn ($match) => $match
                 ->where('rm_number', 'like', '%' . addcslashes($query, '\\%_') . '%')
                 ->orWhere('rm_type', 'like', '%' . addcslashes($query, '\\%_') . '%')))
@@ -235,12 +235,10 @@ class RoomController extends Controller
             return redirect('/rooms')->with('error', 'Room not found.');
         }
 
-        $room->delete();
+        $photoPaths = DB::table('rooms_photos')->where('room_id', $room->id)->pluck('photo_path')->all();
 
-        // deletets the uploaded files
-        // if (Storage::disk('public')->exists('room-covers/' . $room->thumbnail)) {
-        //     Storage::disk('public')->delete('room-covers/' . $room->thumbnail);
-        // }
+        $room->delete();
+        Storage::disk('public')->delete($photoPaths);
 
         return redirect('/rooms')->with('success', 'Room is removed!');
     }

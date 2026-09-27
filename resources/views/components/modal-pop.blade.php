@@ -19,7 +19,9 @@
         document.getElementById('confirm-accept').addEventListener('click', () => {
             const form = pendingForm;
             dialog.close();
-            form?.submit();
+            if (!form) return;
+            window.lockForm?.(form);
+            form.submit();
         });
         dialog.addEventListener('close', () => {
             pendingForm = null;

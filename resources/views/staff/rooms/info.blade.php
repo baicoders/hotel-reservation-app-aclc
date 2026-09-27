@@ -56,7 +56,7 @@
                 </div>
             </dl>
 
-            <form action="{{ url('/rooms/delete/' . $room->id) }}" id="room_delete_form" method="POST" class="mt-6 border-t border-line pt-6"
+            <form action="{{ url('/rooms/delete/' . $room->id) }}" id="room_delete_form" method="POST" data-busy-label="Deleting..." class="mt-6 border-t border-line pt-6"
                 onsubmit="return handleFormSubmission(event, @js('Room ' . $room->rm_number . ' and its ' . $reservations->count() . ' ' . Str::plural('reservation', $reservations->count()) . ', with their payments, will be deleted. This cannot be undone.'), @js('Delete room ' . $room->rm_number . '?'), 'room_delete_form');">
                 @csrf
                 @method('DELETE')

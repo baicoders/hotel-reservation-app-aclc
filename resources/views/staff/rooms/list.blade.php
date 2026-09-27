@@ -58,6 +58,7 @@
                     'status' => $room->status,
                     'room_id' => $room->id,
                     'photo_path' => $room->firstPhoto->photo_path ?? '',
+                    'reservationCount' => $room->reservations_count,
                 ])
             @endforeach
         </div>

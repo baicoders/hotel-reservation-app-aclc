@@ -6,10 +6,11 @@
 - New visual base: lobby teal and brass palette, Big Shoulders Display and Figtree type, shared button, field and card styles.
 - Flash messages show both success and error notices in one stack; each stays until dismissed.
 - The confirm dialog uses the native dialog element: Escape closes it and focus starts on Cancel.
+- Forms that save data disable their button and show "Saving..." once submitted, so a double click cannot submit twice.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
-- The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag.
-- Add room and Edit room share one form with errors under each field, photo previews before upload, and photos can be added when editing. Saving an edit returns to the room info page.
+- The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag and Details, Edit and Delete actions.
+- Add room and Edit room share one form with errors under each field, photo previews before upload with a Remove button for each, and photos can be added when editing. Saving an edit returns to the room info page.
 - The room info page has a photo gallery with Previous and Next, the room details under a large key tag, every reservation for the room with links, and a Book this room action for available rooms.
 - The reservations list shows the reservation ID, room number and stay dates, filters by status, guest, room and a date the guest is staying, and pages of 15. The reservation page shows the guest, the room with links to both, the payment, and a status update whose confirmation names the new status.
 - The guest list shows name, email, phone, address and date added, with a name or email search, pages of 20, and Open details and Delete on each row.
@@ -23,7 +24,7 @@
 - Room photos that are missing or fail to load show "No photo yet" instead of a broken image.
 - Whole number prices such as "100" are accepted when adding or editing a room.
 - An invalid photo no longer leaves a half saved room behind; the room is only created once every photo passes validation.
-- Deleting a room now warns how many reservations and payments are deleted with it.
+- Deleting a room now warns how many reservations and payments are deleted with it, and removes its photo files from storage.
 - The room info page listed only confirmed reservations; checked in, checked out and cancelled stays now show too.
 - The reservations list stopped at 50; every reservation is now reachable through the pager.
 - The reservation page loaded the payment but never showed it.

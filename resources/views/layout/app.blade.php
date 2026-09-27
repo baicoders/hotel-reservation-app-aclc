@@ -18,6 +18,30 @@
     @include('components.alert')
     @include('components.modal-pop')
 
+    <script>
+        const lockedButtons = new Map();
+        window.lockForm = (form) => {
+            form.querySelectorAll('button[type=submit], button:not([type])').forEach((button) => {
+                lockedButtons.set(button, [...button.childNodes]);
+                button.textContent = form.dataset.busyLabel || 'Saving...';
+                button.disabled = true;
+            });
+        };
+        document.addEventListener('submit', (event) => {
+            if (!event.defaultPrevented && event.target.method.toLowerCase() === 'post') {
+                window.lockForm(event.target);
+            }
+        });
+        window.addEventListener('pageshow', (event) => {
+            if (!event.persisted) return;
+            lockedButtons.forEach((children, button) => {
+                button.replaceChildren(...children);
+                button.disabled = false;
+            });
+            lockedButtons.clear();
+        });
+    </script>
+
     @yield('scripts')
 </body>
 </html>

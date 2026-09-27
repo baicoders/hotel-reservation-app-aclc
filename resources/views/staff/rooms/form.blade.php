@@ -56,17 +56,34 @@
 </div>
 
 <script>
-    document.getElementById('roomPhotos').addEventListener('change', (event) => {
+    (() => {
+        const input = document.getElementById('roomPhotos');
         const list = document.getElementById('photo-previews');
-        list.querySelectorAll('img').forEach((img) => URL.revokeObjectURL(img.src));
-        list.replaceChildren(...[...event.target.files].map((file) => {
-            const item = document.createElement('li');
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.alt = file.name;
-            img.className = 'aspect-square w-full rounded-lg object-cover ring-1 ring-line';
-            item.append(img);
-            return item;
-        }));
-    });
+        const render = () => {
+            list.querySelectorAll('img').forEach((img) => URL.revokeObjectURL(img.src));
+            list.replaceChildren(...[...input.files].map((file, index) => {
+                const item = document.createElement('li');
+                item.className = 'flex flex-col gap-1';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = file.name;
+                img.className = 'aspect-square w-full rounded-lg object-cover ring-1 ring-line';
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'text-xs font-semibold text-brick-700 hover:underline';
+                remove.textContent = 'Remove';
+                remove.setAttribute('aria-label', `Remove ${file.name}`);
+                remove.addEventListener('click', () => {
+                    const kept = new DataTransfer();
+                    [...input.files].forEach((other, i) => i !== index && kept.items.add(other));
+                    input.files = kept.files;
+                    render();
+                    input.focus();
+                });
+                item.append(img, remove);
+                return item;
+            }));
+        };
+        input.addEventListener('change', render);
+    })();
 </script>

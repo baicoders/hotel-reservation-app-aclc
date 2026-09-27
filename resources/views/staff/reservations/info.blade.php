@@ -54,7 +54,7 @@
         <section class="card self-start p-5">
             <h2 class="font-semibold">Update status</h2>
             <p class="mt-1 text-sm text-muted">Checking in marks the room unavailable. Checking out or cancelling makes it available again.</p>
-            <form action="{{ url('/reservations/update-status/' . $reservation->id) }}" id="reservation_status_form" method="POST" class="mt-4 flex flex-col gap-3"
+            <form action="{{ url('/reservations/update-status/' . $reservation->id) }}" id="reservation_status_form" method="POST" data-busy-label="Updating..." class="mt-4 flex flex-col gap-3"
                 onsubmit="return handleFormSubmission(event, @js('Change reservation #' . $reservation->id . ' for ' . $guest->full_name . ' to ') + this.status.selectedOptions[0].text + '?', 'Update status?', 'reservation_status_form');">
                 @csrf
                 <label for="status" class="field-label">New status</label>

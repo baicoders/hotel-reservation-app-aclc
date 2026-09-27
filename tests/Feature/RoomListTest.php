@@ -114,6 +114,35 @@ class RoomListTest extends TestCase
             ->assertSee('No photo yet');
     }
 
+    public function test_staff_card_links_to_edit(): void
+    {
+        $room = Room::factory()->create();
+
+        $this->actingAs($this->staff())->get('/rooms')->assertSee(url('/rooms/edit/' . $room->id));
+    }
+
+    public function test_staff_card_has_a_delete_form(): void
+    {
+        $room = Room::factory()->create();
+
+        $this->actingAs($this->staff())->get('/rooms')->assertSee('action="' . url('/rooms/delete/' . $room->id) . '"', false);
+    }
+
+    public function test_staff_card_delete_states_the_reservation_count(): void
+    {
+        $room = Room::factory()->create();
+        \App\Models\Reservation::factory()->count(2)->create(['room_id' => $room->id]);
+
+        $this->actingAs($this->staff())->get('/rooms')->assertSee('its 2 reservations');
+    }
+
+    public function test_guest_cards_have_no_delete_form(): void
+    {
+        $room = Room::factory()->create(['status' => 'available']);
+
+        $this->get('/search-room')->assertDontSee(url('/rooms/delete/' . $room->id));
+    }
+
     public function test_guest_search_links_to_room_details(): void
     {
         $room = Room::factory()->create(['status' => 'available']);
