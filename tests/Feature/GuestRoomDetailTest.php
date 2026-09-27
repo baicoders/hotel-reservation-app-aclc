@@ -30,6 +30,33 @@ class GuestRoomDetailTest extends TestCase
         $this->visit($room)->assertSee(url('/guest/rooms/reserve') . '?room_id=' . $room->id);
     }
 
+    public function test_reserve_carries_the_dates(): void
+    {
+        $room = Room::factory()->create(['status' => 'available']);
+        $in = today()->addDays(4)->toDateString();
+        $out = today()->addDays(6)->toDateString();
+
+        $this->get('/guest/rooms/details/' . $room->id . '?check_in=' . $in . '&check_out=' . $out)
+            ->assertSee('room_id=' . $room->id . '&amp;check_in=' . $in . '&amp;check_out=' . $out, false);
+    }
+
+    public function test_overlapping_dates_are_explained(): void
+    {
+        $room = Room::factory()->create(['status' => 'available']);
+        \App\Models\Reservation::factory()->create(['room_id' => $room->id, 'status' => 'confirmed', 'check_in_date' => today()->addDays(3)->toDateString(), 'check_out_date' => today()->addDays(5)->toDateString()]);
+
+        $this->get('/guest/rooms/details/' . $room->id . '?check_in=' . today()->addDays(4)->toDateString() . '&check_out=' . today()->addDays(6)->toDateString())
+            ->assertSee('This room is already booked for some of these dates.');
+    }
+
+    public function test_bad_dates_are_explained(): void
+    {
+        $room = Room::factory()->create(['status' => 'available']);
+
+        $this->get('/guest/rooms/details/' . $room->id . '?check_in=' . today()->addDays(5)->toDateString() . '&check_out=' . today()->addDays(3)->toDateString())
+            ->assertSee('The check out date must be after the check in date.');
+    }
+
     public function test_room_in_maintenance_explains_it_cannot_be_booked(): void
     {
         $room = Room::factory()->create(['status' => 'maintenance']);

@@ -1,5 +1,6 @@
 @php
-    $href = ($isGuest ?? false) ? url('/guest/rooms/details/' . $room_id) : url('/rooms/details/' . $room_id);
+    $dates = empty($dateQuery) ? '' : '&' . $dateQuery;
+    $href = ($isGuest ?? false) ? url('/guest/rooms/details/' . $room_id) . ($dates ? '?' . ltrim($dates, '&') : '') : url('/rooms/details/' . $room_id);
 @endphp
 <article class="card group relative flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
     <div class="relative aspect-[4/3] bg-lobby-50">
@@ -26,7 +27,7 @@
                 View details<span class="sr-only"> for room {{ $roomNumber }}</span>
             </a>
             @if ($isGuest ?? false)
-                <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room_id }}" class="btn btn-primary relative z-10 px-3 py-1.5">
+                <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room_id . $dates }}" class="btn btn-primary relative z-10 px-3 py-1.5">
                     Reserve<span class="sr-only"> room {{ $roomNumber }}</span>
                 </a>
             @endif

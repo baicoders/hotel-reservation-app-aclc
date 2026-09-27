@@ -27,15 +27,27 @@
                 </div>
             </dl>
 
-            @if ($bookable)
-                <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room->id }}" class="btn btn-primary mt-6 w-full py-3 text-base">Reserve this room</a>
+            @php $dateQuery = http_build_query(['check_in' => $checkIn, 'check_out' => $checkOut]); @endphp
+            @if ($dateError)
+                <p role="alert" class="mt-6 rounded-lg bg-brick-100 p-3 text-sm font-medium text-brick-700">{{ $dateError }} Showing tonight instead.</p>
+            @endif
+            <p class="mt-6 text-sm text-muted">
+                For {{ \Illuminate\Support\Carbon::parse($checkIn)->format('D, M j') }} to {{ \Illuminate\Support\Carbon::parse($checkOut)->format('D, M j') }}
+            </p>
+            @if ($bookable && ! $bookedForDates)
+                <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room->id . '&' . $dateQuery }}" class="btn btn-primary mt-3 w-full py-3 text-base">Reserve this room</a>
+            @elseif ($bookable)
+                <div role="note" class="mt-3 rounded-lg bg-brass-100 p-4 text-sm text-brass-700">
+                    <p class="font-semibold">This room is already booked for some of these dates.</p>
+                    <p class="mt-1">Choose other dates, or another room that is free.</p>
+                </div>
             @else
-                <div role="note" class="mt-6 rounded-lg bg-brass-100 p-4 text-sm text-brass-700">
+                <div role="note" class="mt-3 rounded-lg bg-brass-100 p-4 text-sm text-brass-700">
                     <p class="font-semibold">This room is not available to book right now.</p>
                     <p class="mt-1">Choose another room from the available rooms.</p>
                 </div>
             @endif
-            <a href="{{ url('/search-room') }}" class="btn btn-secondary mt-3 w-full">{{ $bookable ? 'Back to rooms' : 'See available rooms' }}</a>
+            <a href="{{ url('/search-room') . '?' . $dateQuery }}" class="btn btn-secondary mt-3 w-full">{{ $bookable && ! $bookedForDates ? 'Back to rooms' : 'See rooms free for these dates' }}</a>
         </section>
     </div>
 @endsection

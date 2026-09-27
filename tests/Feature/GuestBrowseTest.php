@@ -78,6 +78,58 @@ class GuestBrowseTest extends TestCase
         $this->get('/search-room?page=99')->assertSee('past the last page');
     }
 
+    private function day(int $offset): string
+    {
+        return today()->addDays($offset)->toDateString();
+    }
+
+    public function test_default_search_leaves_out_rooms_booked_tonight(): void
+    {
+        $booked = Room::factory()->create(['rm_number' => 'B1', 'status' => 'available']);
+        Room::factory()->create(['rm_number' => 'F1', 'status' => 'available']);
+        \App\Models\Reservation::factory()->create(['room_id' => $booked->id, 'status' => 'confirmed', 'check_in_date' => $this->day(0), 'check_out_date' => $this->day(2)]);
+
+        $this->get('/search-room')->assertViewHas('rooms', fn ($page) => $this->numbers($page) === ['F1']);
+    }
+
+    public function test_dated_search_lists_rooms_whose_stay_ends_on_the_check_in_day(): void
+    {
+        $room = Room::factory()->create(['rm_number' => 'E1', 'status' => 'available']);
+        \App\Models\Reservation::factory()->create(['room_id' => $room->id, 'status' => 'confirmed', 'check_in_date' => $this->day(3), 'check_out_date' => $this->day(5)]);
+
+        $this->get('/search-room?check_in=' . $this->day(5) . '&check_out=' . $this->day(7))
+            ->assertViewHas('rooms', fn ($page) => $this->numbers($page) === ['E1']);
+    }
+
+    public function test_occupied_room_is_listed_for_later_dates(): void
+    {
+        $room = Room::factory()->create(['rm_number' => 'O1', 'status' => 'unavailable']);
+        \App\Models\Reservation::factory()->create(['room_id' => $room->id, 'status' => 'checked_in', 'check_in_date' => $this->day(0), 'check_out_date' => $this->day(2)]);
+
+        $this->get('/search-room?check_in=' . $this->day(4) . '&check_out=' . $this->day(6))
+            ->assertViewHas('rooms', fn ($page) => $this->numbers($page) === ['O1']);
+    }
+
+    public function test_check_out_before_check_in_falls_back_to_tonight(): void
+    {
+        $this->get('/search-room?check_in=' . $this->day(5) . '&check_out=' . $this->day(3))
+            ->assertViewHas('checkIn', $this->day(0));
+    }
+
+    public function test_bad_dates_are_explained(): void
+    {
+        $this->get('/search-room?check_in=' . $this->day(5) . '&check_out=' . $this->day(3))
+            ->assertSee('The check out date must be after the check in date.');
+    }
+
+    public function test_card_reserve_carries_the_dates(): void
+    {
+        $room = Room::factory()->create(['status' => 'available']);
+
+        $this->get('/search-room?check_in=' . $this->day(4) . '&check_out=' . $this->day(6))
+            ->assertSee('room_id=' . $room->id . '&amp;check_in=' . $this->day(4) . '&amp;check_out=' . $this->day(6), false);
+    }
+
     public function test_no_available_rooms_says_so(): void
     {
         $this->get('/search-room')->assertSee('No rooms are available right now');

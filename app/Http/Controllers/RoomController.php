@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -40,19 +41,46 @@ class RoomController extends Controller
     // list of room to reserve for the guest
     public function listRooms(Request $request)
     {
-        $available = fn () => Room::whereRaw('LOWER(status) = ?', ['available']);
-        $types = $available()->orderBy('rm_type')->distinct()->pluck('rm_type');
+        [$checkIn, $checkOut, $dateError] = $this->stayDates($request);
+
+        $bookable = fn () => Room::whereRaw('LOWER(status) != ?', ['maintenance'])
+            ->whereDoesntHave('reservations', fn ($stay) => $stay->overlapping($checkIn, $checkOut));
+        $types = $bookable()->orderBy('rm_type')->distinct()->pluck('rm_type');
         $type = $types->contains($request->input('type')) ? $request->input('type') : null;
         $sort = in_array($request->input('sort'), ['price_asc', 'price_desc'], true) ? $request->input('sort') : null;
 
-        $rooms = $available()->with('firstPhoto')
+        $rooms = $bookable()->with('firstPhoto')
             ->when($type, fn ($rooms) => $rooms->where('rm_type', $type))
             ->when($sort, fn ($rooms) => $rooms->orderBy('rm_price_per_night', $sort === 'price_asc' ? 'asc' : 'desc'))
             ->orderByRaw('LENGTH(rm_number), rm_number')
             ->paginate(12)
             ->withQueryString();
 
-        return view('guest.search-rooms', compact('rooms', 'types', 'type', 'sort'));
+        return view('guest.search-rooms', compact('rooms', 'types', 'type', 'sort', 'checkIn', 'checkOut', 'dateError'));
+    }
+
+    private function stayDates(Request $request): array
+    {
+        $today = today()->toDateString();
+        $tomorrow = today()->addDay()->toDateString();
+        $in = $request->input('check_in');
+        $out = $request->input('check_out');
+
+        if ($in === null && $out === null) {
+            return [$today, $tomorrow, null];
+        }
+
+        $valid = fn ($date) => is_string($date) && ($parsed = \DateTime::createFromFormat('!Y-m-d', $date)) && $parsed->format('Y-m-d') === $date;
+
+        $error = match (true) {
+            ! $valid($in) || ! $valid($out) => 'Choose a check in and a check out date.',
+            $in < $today => 'The check in date cannot be in the past.',
+            $out <= $in => 'The check out date must be after the check in date.',
+            Carbon::parse($in)->diffInDays(Carbon::parse($out)) > ReservationController::MAX_NIGHTS => 'A stay can be at most ' . ReservationController::MAX_NIGHTS . ' nights.',
+            default => null,
+        };
+
+        return $error ? [$today, $tomorrow, $error] : [$in, $out, null];
     }
     public function search(Request $request)
     {
@@ -172,12 +200,14 @@ class RoomController extends Controller
     }
 
     // show the details of the room to reserve for the guest
-    public function reserveRoom(string $room_id)
+    public function reserveRoom(Request $request, string $room_id)
     {
         $room = Room::where('id', $room_id)->firstOrFail();
         $photos = DB::table('rooms_photos')->where('room_id', $room->id)->orderBy('id')->get();
+        [$checkIn, $checkOut, $dateError] = $this->stayDates($request);
+        $bookedForDates = $room->reservations()->overlapping($checkIn, $checkOut)->exists();
 
-        return view('guest.room-details', compact('room', 'photos'));
+        return view('guest.room-details', compact('room', 'photos', 'checkIn', 'checkOut', 'bookedForDates', 'dateError'));
     }
 
     /**

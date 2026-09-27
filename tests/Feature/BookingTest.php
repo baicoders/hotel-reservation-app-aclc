@@ -136,6 +136,21 @@ class BookingTest extends TestCase
         $this->book($this->room())->assertDontSee('7 Private Lane');
     }
 
+    public function test_form_fills_dates_from_the_query(): void
+    {
+        $room = $this->room();
+
+        $this->get('/guest/rooms/reserve?room_id=' . $room->id . '&check_in=' . $this->day(4) . '&check_out=' . $this->day(6))
+            ->assertSee('value="' . $this->day(6) . '"', false);
+    }
+
+    public function test_form_ignores_array_dates_in_the_query(): void
+    {
+        $room = $this->room();
+
+        $this->get('/guest/rooms/reserve?room_id=' . $room->id . '&check_in[]=x')->assertOk();
+    }
+
     public function test_form_without_room_goes_to_the_room_browser(): void
     {
         $this->get('/guest/rooms/reserve')->assertRedirect('/search-room');

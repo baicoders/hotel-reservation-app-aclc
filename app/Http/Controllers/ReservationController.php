@@ -13,7 +13,7 @@ use \App\Models\Room;
 
 class ReservationController extends Controller
 {
-    private const MAX_NIGHTS = 30;
+    public const MAX_NIGHTS = 30;
 
     /**
      * Display a listing of the resource.
@@ -66,7 +66,11 @@ class ReservationController extends Controller
             return redirect('/guest/rooms/details/' . $room->id)->with('error', 'This room is closed for maintenance and cannot be booked.');
         }
 
-        return view('guest.reserved-room-form', compact('room'));
+        $date = fn ($value) => is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ? $value : null;
+        $checkIn = $date($request->query('check_in'));
+        $checkOut = $date($request->query('check_out'));
+
+        return view('guest.reserved-room-form', compact('room', 'checkIn', 'checkOut'));
     }
 
     public function reserveRoom(Request $request)
@@ -111,11 +115,7 @@ class ReservationController extends Controller
                 throw ValidationException::withMessages(['room_id' => 'This room is closed for maintenance and cannot be booked.']);
             }
 
-            $overlaps = Reservation::where('room_id', $room->id)
-                ->whereIn('status', ['pending', 'confirmed', 'checked_in'])
-                ->whereDate('check_in_date', '<', $checkOut)
-                ->whereDate('check_out_date', '>', $checkIn)
-                ->exists();
+            $overlaps = Reservation::where('room_id', $room->id)->overlapping($checkIn, $checkOut)->exists();
 
             if ($overlaps) {
                 throw ValidationException::withMessages(['check_in_date' => 'This room is already booked for some of these dates.']);

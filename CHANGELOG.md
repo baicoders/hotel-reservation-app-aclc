@@ -13,6 +13,7 @@
 - The guest room page shows the room details, a gallery of every photo, Reserve and Back, and says plainly when a room cannot be booked. It shares its gallery with the staff room page.
 - Guests choose check in and check out dates when booking; the total is the nightly rate times the nights, stays run up to 30 nights, and the receipt shows the stay and the total paid.
 - A booking no longer changes the room status: rooms can hold bookings for different dates, and only rooms in maintenance cannot be booked. Checking in marks the room unavailable; checking out or cancelling makes it available again unless another guest is checked in there or it is in maintenance (decision 0002).
+- The guest room browser searches by check in and check out dates (tonight by default) and lists rooms free for that stay; the dates carry through to the room page and the booking form, and the room page says when a room is already booked for them.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag and Details, Edit and Delete actions.
