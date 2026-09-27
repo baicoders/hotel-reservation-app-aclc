@@ -50,16 +50,15 @@ class GuestController extends Controller
      */
     public function show(string $guest_id)
     {
-        //
         $guest = Guest::findOrFail($guest_id);
-        // show the list of reservations made by the guest
-        $bookings = Reservation::join('guests', 'reservations.guest_id', '=', 'guests.id')
-            ->join('rooms', 'reservations.room_id', '=', 'rooms.id')
+
+        $bookings = Reservation::join('rooms', 'reservations.room_id', '=', 'rooms.id')
             ->where('reservations.guest_id', $guest->id)
-            ->select('reservations.*', 'guests.*', 'rooms.*')
+            ->select('reservations.*', 'rooms.rm_number as room_number', 'rooms.rm_type as room_type', 'rooms.status as room_status')
+            ->latest('reservations.created_at')
+            ->latest('reservations.id')
             ->get();
-        //
-        // dd($bookings->toArray());
+
         return view('staff.guest.info', compact('guest', 'bookings'));
     }
 

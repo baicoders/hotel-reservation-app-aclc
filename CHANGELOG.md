@@ -13,6 +13,7 @@
 - The room info page has a photo gallery with Previous and Next, the room details under a large key tag, every reservation for the room with links, and a Book this room action for available rooms.
 - The reservations list has status filters, room numbers and stay dates, and pages of 15. The reservation page shows the guest, the room with links to both, the payment, and a status update whose confirmation names the new status.
 - The guest list shows name, email, phone, address and date added, with a name or email search, pages of 20, and Open details and Delete on each row.
+- The guest page shows the profile, every reservation with its room and both statuses, and a Delete guest action that states the reservation count.
 
 ### Fixed
 - Pages no longer print markup before the doctype, which forced browsers into quirks mode.
@@ -28,6 +29,8 @@
 - The reservation page loaded the payment but never showed it.
 - The guest list stopped at 50; every guest is now reachable through the pager.
 - Deleting a guest makes the rooms their confirmed or checked in reservations held available again, unless another guest still holds the room. The confirmation states how many reservations go with the guest.
+- The guest page showed the room status and room id in place of the reservation status and id; it now shows both statuses and links to the right reservation.
+- The guest page Reserve Room button pointed to a page that does not exist; Book a room now opens the room browser.
 
 ### Security
 - Uploaded room photos are stored under a name and extension taken from the file content, not the uploaded file name, so an image renamed to .html can no longer be served as a web page.
