@@ -1,52 +1,31 @@
 @extends('layout.app')
 
+@section('title', 'Welcome')
+
 @section('content')
-    <div class=" bg-cover bg-center bg-blend-multiply bg-gray-500 bg-fixed" style="background-image: url('{{ asset('aclc_building_img.jpg') }}');">
-        <div class="container max-w-[800px] mx-auto flex flex-col">
-            {{-- hero --}}
-            <div class="h-screen p-4 ">
-                <div class="flex flex-col gap-4 h-full w-full">
-                    <div class="p-4 h-full basis-full flex justify-center items-center relative">
-                        <h1 class="text-2xl text-white text-shadow-2xs font-bold text-center bottom-4 right-4 absolute">
-                            Welcome to the Hotel Reservation System!
-                        </h1>
-                    </div>
-                    <div class="flex flex-row gap-4 full">
-                        <a href="{{ url('/search-room') }}"
-                            class="bg-white rounded-xl p-4 h-full basis-full text-2xl font-bold text-center flex justify-center items-center hover:bg-gray-200 transition">
-                            Reserve Room
-                        </a>
-                        <a href="{{ url('/dashboard') }}"
-                            class="bg-white rounded-xl p-4 h-full basis-full text-2xl font-bold text-center flex justify-center items-center hover:bg-gray-200 transition">
-                            Manage
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <div class="flex min-h-screen flex-col bg-lobby-950 bg-cover bg-center text-white"
+        style="background-image: linear-gradient(rgb(8 36 35 / 0.72), rgb(8 36 35 / 0.9)), url('{{ asset('aclc_building_img.jpg') }}');">
+        <header class="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8">
+            <a href="{{ url('/home') }}" class="font-display text-2xl font-extrabold tracking-wide text-brass-400 uppercase">ACLC</a>
+        </header>
 
-            {{-- description --}}
-            <div class="p-4">
-                <div class="bg-white rounded-xl p-4">
-                    <p class="text-gray-700">
-                        This is the home page of the Hotel Reservation System. Use the navigation links above to manage
-                        rooms,
-                        guests, reservations, and payments.
-                    </p>
-                </div>
+        <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 py-16 sm:px-8">
+            <h1 class="max-w-3xl text-5xl leading-none sm:text-7xl">@include('components.title')</h1>
+            <p class="mt-6 max-w-xl text-lg text-lobby-100">
+                Browse the available rooms, book one in a few steps and get your receipt straight away.
+                Front desk staff manage rooms, guests, reservations and payments from the same system.
+            </p>
+            <div class="mt-10 flex flex-wrap gap-4">
+                <a href="{{ url('/search-room') }}" class="btn bg-brass-400 px-6 py-3 text-base text-lobby-950 hover:bg-brass-100">Reserve a room</a>
+                <a href="{{ url('/dashboard') }}" class="btn border border-lobby-100/40 px-6 py-3 text-base text-white hover:bg-white/10">Manage</a>
             </div>
+        </main>
 
-            {{-- footer --}}
-            <div class="p-4 text-center text-gray-300">
-                &copy; {{ date('Y') }} Hotel Reservation System. All rights reserved.
-                <br>
-                Developed by Programmers Guild.
-            </div>
-        <!-- Well begun is half done. - Aristotle -->
+        <footer class="mx-auto w-full max-w-6xl px-4 py-6 text-sm text-lobby-100/80 sm:px-8">
+            &copy; {{ date('Y') }} ACLC Hotel Reservation System. Developed by Programmers Guild.
+            @if (config('app.version'))
+                <span class="ml-2">Version {{ config('app.version') }}</span>
+            @endif
+        </footer>
     </div>
-@endsection
-
-@section('scripts')
-    <script>
-        console.log('Home page loaded');
-    </script>
 @endsection

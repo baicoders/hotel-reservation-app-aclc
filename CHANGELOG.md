@@ -7,6 +7,8 @@
 - Flash messages show both success and error notices in one stack; each stays until dismissed.
 - The confirm dialog uses the native dialog element: Escape closes it and focus starts on Cancel.
 - Forms that save data disable their button and show "Saving..." once submitted, so a double click cannot submit twice.
+- The home page shows the system title over the ACLC building with Reserve a room and Manage, and the version in the footer when APP_VERSION is set.
+- The login page has a clear error under the Username field, keeps the typed username, and shows Signing in while it submits. The 404 page links home and to the room browser.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag and Details, Edit and Delete actions.
@@ -32,6 +34,8 @@
 - Deleting a guest makes the rooms their confirmed or checked in reservations held available again, unless another guest still holds the room. The confirmation states how many reservations go with the guest.
 - The guest page showed the room status and room id in place of the reservation status and id; it now shows both statuses and links to the right reservation.
 - The guest page Reserve Room button pointed to a page that does not exist; Book a room now opens the room browser.
+- A failed login reported its error on an email field the form does not have; it now appears under Username.
+- Signed in staff who open /login go straight to the dashboard.
 - Typing % or _ into the reservations, rooms or guests search matched every row; those characters now match literally.
 
 ### Security

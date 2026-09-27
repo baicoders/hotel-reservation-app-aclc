@@ -1,4 +1,5 @@
-@if (session('success') || session('error') || $errors->any())
+@php $showErrors = $errors->any() && ! View::hasSection('inline-errors'); @endphp
+@if (session('success') || session('error') || $showErrors)
     <div class="fixed inset-x-4 top-4 z-40 flex flex-col items-end gap-3 sm:left-auto sm:w-96">
         @if (session('success'))
             <div data-toast role="status"
@@ -20,7 +21,9 @@
             </div>
         @endif
 
-        @include('components.pop-error')
+        @if ($showErrors)
+            @include('components.pop-error')
+        @endif
     </div>
 
     <script>

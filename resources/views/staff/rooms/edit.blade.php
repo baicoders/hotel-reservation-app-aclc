@@ -2,6 +2,7 @@
 
 @section('title', 'Edit room ' . $room->rm_number)
 @section('eyebrow', 'Rooms')
+@section('inline-errors', true)
 
 @section('page')
     <form action="{{ url('/rooms/update/' . $room->id) }}" method="POST" enctype="multipart/form-data" class="card max-w-3xl">

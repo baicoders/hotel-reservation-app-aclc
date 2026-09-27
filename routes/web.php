@@ -15,8 +15,10 @@ Route::get('/home', function () {
 });
 
 // Authentication Routes
-Route::get('/login', [AuthenticationController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthenticationController::class, 'loginUser']);
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthenticationController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthenticationController::class, 'loginUser']);
+});
 Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest Routes

@@ -2,6 +2,7 @@
 
 @section('title', 'Add room')
 @section('eyebrow', 'Rooms')
+@section('inline-errors', true)
 
 @section('page')
     <form action="{{ url('/rooms/record') }}" method="POST" enctype="multipart/form-data" class="card max-w-3xl">
