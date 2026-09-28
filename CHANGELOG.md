@@ -25,6 +25,9 @@
 - The guest list shows name, email, phone, address and date added, with a name or email search, pages of 20, and Open details and Delete on each row.
 - The guest page shows the profile, every reservation with its room and both statuses, and a Delete guest action that states the reservation count.
 
+### Removed
+- The unused guest details and payment templates of the old multi step booking flow, its commented out controller methods, and two empty staff edit templates.
+
 ### Fixed
 - Pages in the local Docker setup took up to several seconds to load; PHP now caches compiled code for the dev server (restart the app container after editing PHP or Blade files).
 - Pages no longer print markup before the doctype, which forced browsers into quirks mode.
@@ -48,6 +51,7 @@
 - Typing % or _ into the reservations, rooms or guests search matched every row; those characters now match literally.
 
 - Bookings were fixed at one night starting today; they now use the chosen dates.
+- Opening the booking form with a list in room_id crashed the page; it now returns to the room browser.
 - Refreshing the receipt submitted the booking again; the receipt now opens after a redirect.
 - The receipt claimed a confirmation email was sent, but the app sends none; the claim is gone.
 - The booking form lost the chosen payment method after a validation error, so resubmitting silently failed.

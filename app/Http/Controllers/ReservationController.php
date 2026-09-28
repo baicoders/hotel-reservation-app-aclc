@@ -56,7 +56,8 @@ class ReservationController extends Controller
     // reserving a room for the guest
     public function reserveRoomForm(Request $request)
     {
-        $room = Room::find($request->input('room_id'));
+        $roomId = $request->input('room_id');
+        $room = is_scalar($roomId) ? Room::find($roomId) : null;
 
         if (! $room) {
             return redirect('/search-room');
@@ -194,78 +195,6 @@ class ReservationController extends Controller
 
         return redirect($request->input('next') === 'rooms' ? '/search-room' : '/home');
     }
-
-    // public function reserveRoomForm_Get1(Request $request)
-    // {
-    //     $room = $request->room_id ? \App\Models\Room::find($request->room_id) : null;
-
-    //     return view('guest.room-details', compact('room'));
-    // }
-    // public function reserveRoomForm_Post1(Request $request)
-    // {
-    //     $validatedData = $request->validate([
-    //         'room_id' => 'required',
-    //     ]);
-    //     $room = \App\Models\Room::find($validatedData['room_id']);
-
-    //     // dd($room);
-
-    //     return view('guest.guest-form', compact('room'));
-    // }
-    // public function reserveRoomForm_Post2(Request $request)
-    // {
-    //     $validatedData = $request->validate([
-    //         'room_id' => 'required',
-    //         'name' => 'required',
-    //         'email' => 'required|email',
-    //         'phone' => 'required',
-    //         'address' => 'required',
-    //     ]);
-    //     $room = \App\Models\Room::find($validatedData['room_id']);
-    //     $guest = (object) [
-    //         'name' => $validatedData['name'],
-    //         'email' => $validatedData['email'],
-    //         'phone' => $validatedData['phone'],
-    //         'address' => $validatedData['address'],
-    //     ];
-
-    //     return view('guest.payment-form', compact('room', 'guest'));
-    // }
-    // public function reserveRoomForm_3(Request $request)
-    // {
-    //     $validatedData = $request->validate([
-    //         'room_id' => 'required',
-
-    //         'name' => 'required',
-    //         'email' => 'required|email',
-    //         'phone' => 'required',
-    //         'address' => 'required',
-
-    //         'amount' => 'required',
-    //         'payment_method' => 'required',
-    //         'payment_date' => 'required|date',
-    //     ]);
-    //     $room = \App\Models\Room::find($validatedData['room_id']);
-
-    //     // check if amount is equal to room price
-    //     if ($validatedData['amount'] <= $room->rm_price_per_night) {
-    //         return redirect()->back()->withErrors(['amount' => 'Amount must be equal to room price']);
-    //     }
-
-    //     $guest = (object) [
-    //         'name' => $validatedData['name'],
-    //         'email' => $validatedData['email'],
-    //         'phone' => $validatedData['phone'],
-    //         'address' => $validatedData['address'],
-    //     ];
-    //     $payment = (object) [
-    //         'amount' => $validatedData['amount'],
-    //         'payment_method' => $validatedData['payment_method'],
-    //         'payment_date' => $validatedData['payment_date'],
-    //     ];
-
-    //     return view('guest.receipt-page', compact('room', 'guest', 'payment'));
-    // }
 
     /**
      * Store a newly created resource in storage.
