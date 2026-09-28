@@ -27,6 +27,8 @@ Route::get('/guest/rooms/details/{room_id}', [RoomController::class, 'reserveRoo
 
 Route::get('/guest/rooms/reserve', [ReservationController::class, 'reserveRoomForm']);
 Route::post('/guest/rooms/booking-room', [ReservationController::class, 'reserveRoom']);
+Route::get('/guest/receipt', [ReservationController::class, 'receipt']);
+Route::post('/guest/receipt/clear', [ReservationController::class, 'clearReceipt']);
 
 // Staff Routes
 Route::middleware('auth')->group(function () {

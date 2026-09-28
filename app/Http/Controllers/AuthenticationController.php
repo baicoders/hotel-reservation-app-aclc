@@ -22,6 +22,7 @@ class AuthenticationController extends Controller
 
         if (Auth::attempt(['name' => $credentials['username'], 'password' => $credentials['password']])) {
             $request->session()->regenerate();
+            $request->session()->forget('receipt');
             return redirect()->intended('dashboard');
         }
 

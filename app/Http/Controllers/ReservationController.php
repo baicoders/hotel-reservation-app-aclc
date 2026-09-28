@@ -154,14 +154,45 @@ class ReservationController extends Controller
             return [$reservation, $payment];
         });
 
-        $guest = (object) [
-            'full_name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'phone_number' => $validatedData['phone'],
-            'address' => $validatedData['address'],
-        ];
+        $request->session()->put('receipt', [
+            'number' => '#' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT),
+            'room_number' => $room->rm_number,
+            'room_type' => $room->rm_type,
+            'rate' => (float) $room->rm_price_per_night,
+            'check_in' => $reservation->check_in_date,
+            'check_out' => $reservation->check_out_date,
+            'nights' => $nights,
+            'total' => (float) $payment->amount,
+            'payment_method' => $payment->payment_method,
+            'payment_date' => $payment->payment_date,
+            'guest_name' => $validatedData['name'],
+            'guest_email' => $validatedData['email'],
+            'guest_phone' => $validatedData['phone'],
+            'guest_address' => $validatedData['address'],
+            'expires_at' => now()->addMinutes(15)->getTimestamp(),
+        ]);
 
-        return view('guest.receipt-page', compact('room', 'guest', 'reservation', 'payment', 'nights'));
+        return redirect('/guest/receipt');
+    }
+
+    public function receipt(Request $request)
+    {
+        $receipt = $request->session()->get('receipt');
+
+        if (! is_array($receipt) || ($receipt['expires_at'] ?? 0) < now()->getTimestamp()) {
+            $request->session()->forget('receipt');
+
+            return redirect('/search-room');
+        }
+
+        return view('guest.receipt-page', compact('receipt'));
+    }
+
+    public function clearReceipt(Request $request)
+    {
+        $request->session()->forget('receipt');
+
+        return redirect($request->input('next') === 'rooms' ? '/search-room' : '/home');
     }
 
     // public function reserveRoomForm_Get1(Request $request)

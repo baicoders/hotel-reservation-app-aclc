@@ -133,7 +133,9 @@ class BookingTest extends TestCase
     {
         Guest::factory()->create(['email' => 'lena.cruz@example.com', 'phone_number' => '0999 111 2222', 'address' => '7 Private Lane']);
 
-        $this->book($this->room())->assertDontSee('7 Private Lane');
+        $this->book($this->room());
+
+        $this->get('/guest/receipt')->assertDontSee('7 Private Lane');
     }
 
     public function test_form_fills_dates_from_the_query(): void

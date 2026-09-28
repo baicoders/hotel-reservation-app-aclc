@@ -15,6 +15,7 @@
 - A booking no longer changes the room status: rooms can hold bookings for different dates, and only rooms in maintenance cannot be booked. Checking in marks the room unavailable; checking out or cancelling makes it available again unless another guest is checked in there or it is in maintenance (decision 0002).
 - The guest room browser searches by check in and check out dates (tonight by default) and lists rooms free for that stay; the dates carry through to the room page and the booking form, and the room page says when a room is already booked for them.
 - The booking form shows the room, nights and total beside the stay, guest and payment sections; the total follows the dates as they change, errors sit under each field, and Cancel returns to the room page.
+- The booking receipt shows a confirmation number, the stay, the guest details and the payment, with Print receipt, Save as PDF (through the print window), Book another room and Done; printing hides the site header and buttons. For privacy the receipt closes after 15 minutes, on Done or Book another room, and when staff sign in on that browser.
 - Staff pages get a sidebar that marks the current page and folds behind a Menu button on phones.
 - The dashboard shows totals for rooms, available rooms, open reservations and guests, recent reservations by room number and status, rooms not available, the latest rooms and new guests, with a Refresh link and the time the page loaded.
 - The staff rooms list has a search that keeps what was typed, a status filter, pages of 12 rooms ordered by room number, and room cards with a brass key tag and Details, Edit and Delete actions.
@@ -47,6 +48,8 @@
 - Typing % or _ into the reservations, rooms or guests search matched every row; those characters now match literally.
 
 - Bookings were fixed at one night starting today; they now use the chosen dates.
+- Refreshing the receipt submitted the booking again; the receipt now opens after a redirect.
+- The receipt claimed a confirmation email was sent, but the app sends none; the claim is gone.
 - The booking form lost the chosen payment method after a validation error, so resubmitting silently failed.
 - Changing a reservation status could put a room in maintenance back to available or unavailable; maintenance is now left alone.
 - A room can no longer be booked twice for overlapping dates: the booking rechecks confirmed, checked in and pending reservations inside its transaction.
