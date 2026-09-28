@@ -6,6 +6,85 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-display: 'Big Shoulders Display', 'Arial Narrow', ui-sans-serif, sans-serif;
+
+    --color-lobby-950: #082423;
+    --color-lobby-900: #0e3b3a;
+    --color-lobby-800: #144b49;
+    --color-lobby-700: #1d605d;
+    --color-lobby-100: #dce8e6;
+    --color-lobby-50: #eef4f3;
+    --color-brass-700: #7a5520;
+    --color-brass-600: #9a7030;
+    --color-brass-400: #d2a65a;
+    --color-brass-100: #f5ead3;
+    --color-porcelain: #f4f6f5;
+    --color-ink: #1b2827;
+    --color-muted: #4a5a58;
+    --color-line: #d5dedc;
+    --color-moss-700: #25653f;
+    --color-moss-100: #dcefe2;
+    --color-brick-700: #a13a2a;
+    --color-brick-100: #f8e1dc;
+}
+
+@layer base {
+    body {
+        @apply bg-porcelain font-sans text-ink antialiased;
+    }
+
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-brass-600;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply bg-lobby-900 text-white hover:bg-lobby-700;
+    }
+
+    .btn-secondary {
+        @apply border border-line bg-white text-ink hover:bg-lobby-50;
+    }
+
+    .btn-danger {
+        @apply border border-brick-700/30 bg-white text-brick-700 hover:bg-brick-100;
+    }
+
+    .card {
+        @apply rounded-xl border border-line bg-white;
+    }
+
+    .field-label {
+        @apply mb-1 block text-sm font-semibold text-ink;
+    }
+
+    .field-input {
+        @apply h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-ink placeholder:text-muted/70 focus:border-lobby-700 focus:outline-none focus:ring-2 focus:ring-lobby-700/20;
+    }
+
+    .field-error {
+        @apply mt-1 text-sm text-brick-700;
+    }
+
+    .page-title {
+        @apply font-display text-4xl font-bold tracking-wide text-lobby-900 uppercase;
+    }
+
+    .eyebrow {
+        @apply text-xs font-semibold tracking-[0.18em] text-muted uppercase;
+    }
 }

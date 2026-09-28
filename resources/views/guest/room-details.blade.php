@@ -1,83 +1,53 @@
-@extends('layout.app')
+@extends('layout.guest')
 
-@section('content')
-    <div class=" bg-gray-300">
-        <div class="container p-4 mx-auto flex flex-col gap-4 h-auto max-w-[800px]">
-            {{-- top bar --}}
-            <div class="bg-white rounded-xl p-4 basis-auto">
-                <a href="{{ url('/home') }}" class="flex justify-center items-center gap-4">
-                    <h1 class="text-2xl font-bold">
-                        Hotel Reservation System!
-                    </h1>
-                </a>
-            </div>
+@section('title', 'Room ' . $room->rm_number)
+@section('eyebrow', 'Room details')
 
-            {{-- room details --}}
-            <div class="basis-full">
-                <div class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth rounded-t-xl h-64">
-                    @if ($room->images && count($room->images))
-                        @foreach ($room->images as $image)
-                            <!-- Carousel Item 1 -->
-                            <div class="shrink-0 w-full h-full snap-start">
-                                <div class="bg-gray-200 h-full flex items-center justify-center text-xl">
-                                    <img src="{{ asset('storage/' . $image->photo_path) }}"
-                                        class="block w-full h-full object-cover" alt="..." />
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="bg-gray-200 h-full flex items-center justify-center text-xl text-gray-500 w-full">
-                            No images uploaded for this room.
-                        </div>
-                    @endif
+@section('page')
+    @php $bookable = strtolower($room->status) !== 'maintenance'; @endphp
+    <div class="grid gap-6 lg:grid-cols-5">
+        <section class="card overflow-hidden lg:col-span-3" aria-label="Photos">
+            @include('components.room-gallery', ['images' => $photos, 'roomNumber' => $room->rm_number])
+        </section>
 
+        <section class="card self-start p-6 lg:col-span-2">
+            @include('components.key-tag', ['number' => $room->rm_number, 'size' => 'lg'])
+            <dl class="mt-6 divide-y divide-line">
+                <div class="flex justify-between gap-4 py-3">
+                    <dt class="text-muted">Type</dt>
+                    <dd class="font-semibold">{{ ucfirst($room->rm_type) }}</dd>
                 </div>
-                {{-- <div class="bg-gray-200 rounded-t-xl p-4 h-full basis-full">
-                    <div class="grid grid-cols-3 gap-4">
-                        @foreach ($photos as $photo)
-                            <div class="bg-white rounded-xl overflow-hidden">
-                                <img src="{{ asset('storage/room_photos/' . $photo->photo_path) }}" alt="Room Photo"
-                                    class="w-full h-48 object-cover">
-                            </div>
-                        @endforeach
-                    </div>
-                </div> --}}
-                <div class="bg-white rounded-b-xl p-4 basis-auto">
-                    Room Number: {{ $room->rm_number }}<br>
-                    Room Type: {{ $room->rm_type }}<br>
-                    Room Price: {{ $room->rm_price_per_night }}<br>
-                    Status: {{ $room->status }}<br>
+                <div class="flex justify-between gap-4 py-3">
+                    <dt class="text-muted">Price per night</dt>
+                    <dd class="font-semibold tabular-nums">${{ number_format($room->rm_price_per_night, 2) }}</dd>
                 </div>
-            </div>
+                <div class="flex items-center justify-between gap-4 py-3">
+                    <dt class="text-muted">Status</dt>
+                    <dd>@include('components.status-badge', ['status' => $room->status])</dd>
+                </div>
+            </dl>
 
-            {{-- footer --}}
-            <div class="flex flex-row gap-4 basis-auto">
-                <a href="{{ url('search-room') }}" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full">
-                    Back
-                </a>
-                <form action="{{ url('/guest/rooms/reserve') }}" method="GET" class="basis-full">
-                    <input type="hidden" name="room_id" value="{{ $room->id }}">
-                    <button type="submit" @disabled(strtolower($room->status) !== 'available')
-                        class="w-full bg-gray-100 hover:bg-gray-200 rounded-xl p-4 disabled:cursor-not-allowed disabled:opacity-50">
-                        Book Now
-                    </button>
-                </form>
-                {{-- <a href="{{ url('guest/rooms/guest-details/') }}" class="bg-gray-100 hover:bg-gray-200 rounded-xl p-4 basis-full">
-                    Book Now
-                </a> --}}
-            </div>
-        </div>
-        <!-- I have not failed. I've just found 10,000 ways that won't work. - Thomas Edison -->
+            @php $dateQuery = http_build_query(['check_in' => $checkIn, 'check_out' => $checkOut]); @endphp
+            @if ($dateError)
+                <p role="alert" class="mt-6 rounded-lg bg-brick-100 p-3 text-sm font-medium text-brick-700">{{ $dateError }} Showing tonight instead.</p>
+            @endif
+            <p class="mt-6 text-sm text-muted">
+                For {{ \Illuminate\Support\Carbon::parse($checkIn)->format('D, M j') }} to {{ \Illuminate\Support\Carbon::parse($checkOut)->format('D, M j') }}
+            </p>
+            @if ($bookable && ! $bookedForDates)
+                <a href="{{ url('/guest/rooms/reserve') . '?room_id=' . $room->id . '&' . $dateQuery }}" class="btn btn-primary mt-3 w-full py-3 text-base">Reserve this room</a>
+            @elseif ($bookable)
+                <div role="note" class="mt-3 rounded-lg bg-brass-100 p-4 text-sm text-brass-700">
+                    <p class="font-semibold">This room is already booked for some of these dates.</p>
+                    <p class="mt-1">Choose other dates, or another room that is free.</p>
+                </div>
+            @else
+                <div role="note" class="mt-3 rounded-lg bg-brass-100 p-4 text-sm text-brass-700">
+                    <p class="font-semibold">This room is not available to book right now.</p>
+                    <p class="mt-1">Choose another room from the available rooms.</p>
+                </div>
+            @endif
+            <a href="{{ url('/search-room') . '?' . $dateQuery }}" class="btn btn-secondary mt-3 w-full">{{ $bookable && ! $bookedForDates ? 'Back to rooms' : 'See rooms free for these dates' }}</a>
+        </section>
     </div>
 @endsection
-
-@section('scripts')
-    <script>
-        console.log('Guest Room Details page loaded');
-    </script>
-@endsection
-
-
-{{-- <div>
-    <!-- Always remember that you are absolutely unique. Just like everyone else. - Margaret Mead -->
-</div> --}}

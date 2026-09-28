@@ -1,4 +1,3 @@
-<div>
-    ACLC Hotel Reservation System
-    <!-- Act only according to that maxim whereby you can, at the same time, will that it should become a universal law. - Immanuel Kant -->
-</div>
+<span class="block font-display font-extrabold tracking-wide uppercase">
+    <span class="text-brass-400">ACLC</span> Hotel Reservation System
+</span>

@@ -1,20 +1,17 @@
 @extends('layout.app')
 
+@section('title', 'Page not found')
+
 @section('content')
-    <div class="flex flex-col bg-gray-300 ">
-        <div class="h-screen p-4 flex justify-center items-center">
-            <div class="flex flex-col gap-4 text-center">
-                <h1 class="text-2xl font-bold">404</h1>
-                <h1 class="text-2xl font-bold">Page Not Found ya Dingus</h1>
-                <a href="{{ url('/home') }}" class="text-gray-600 hover:underline">Go back home</a>
+    <main class="flex min-h-screen items-center justify-center px-4 py-16">
+        <div class="max-w-md text-center">
+            <div class="flex justify-center">@include('components.key-tag', ['number' => '404', 'size' => 'lg'])</div>
+            <h1 class="page-title mt-6">Page not found</h1>
+            <p class="mt-3 text-muted">This page does not exist or was moved. Check the address, or go back to the start.</p>
+            <div class="mt-8 flex flex-wrap justify-center gap-3">
+                <a href="{{ url('/home') }}" class="btn btn-secondary">Go to home</a>
+                <a href="{{ url('/search-room') }}" class="btn btn-primary">Browse rooms</a>
             </div>
         </div>
-        <!-- Order your soul. Reduce your wants. - Augustine -->
-    </div>
-@endsection
-
-@section('scripts')
-    <script>
-        console.log('404 page loaded');
-    </script>
+    </main>
 @endsection

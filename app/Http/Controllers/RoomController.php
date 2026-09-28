@@ -5,47 +5,86 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class RoomController extends Controller
 {
+    private const ATTRIBUTES = [
+        'roomPrice' => 'price per night',
+        'roomPhotos.*' => 'photo',
+    ];
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        // $rooms = Room::limit(10)->leftJoin('rooms_photos', 'rooms.id', '=', 'rooms_photos.room_id')->select('rooms.*', 'rooms_photos.room_id','rooms_photos.photo_path')->latest('rooms.created_at')->distinct('rooms_photos.room_id')->get();
-        $rooms = Room::limit(10)->with('firstPhoto')->latest('created_at')->get();
-        // dd($rooms);
-        return view('staff.rooms.list', compact('rooms'));
+        $query = is_string($request->input('query')) ? trim($request->input('query')) : '';
+        $status = in_array($request->input('status'), ['available', 'unavailable', 'maintenance'], true)
+            ? $request->input('status')
+            : null;
+
+        $rooms = Room::with('firstPhoto')->withCount('reservations')
+            ->when($query !== '', fn ($rooms) => $rooms->where(fn ($match) => $match
+                ->where('rm_number', 'like', '%' . addcslashes($query, '\\%_') . '%')
+                ->orWhere('rm_type', 'like', '%' . addcslashes($query, '\\%_') . '%')))
+            ->when($status, fn ($rooms) => $rooms->whereRaw('LOWER(status) = ?', [$status]))
+            ->orderByRaw('LENGTH(rm_number), rm_number')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('staff.rooms.list', compact('rooms', 'query', 'status'));
     }
 
     // list of room to reserve for the guest
-    public function listRooms()
+    public function listRooms(Request $request)
     {
-        //
-        $rooms = Room::whereRaw('LOWER(status) = ?', ['available'])
-            ->limit(50)
-            ->with('firstPhoto')
-            ->latest('created_at')
-            ->get();
-        // $rooms = Room::where('status', 'available')->with('firstPhoto')->latest('created_at')->get();
-        // dd($rooms);
-        return view('guest.search-rooms', compact('rooms'));
+        [$checkIn, $checkOut, $dateError] = $this->stayDates($request);
+
+        $bookable = fn () => Room::whereRaw('LOWER(status) != ?', ['maintenance'])
+            ->whereDoesntHave('reservations', fn ($stay) => $stay->overlapping($checkIn, $checkOut));
+        $types = $bookable()->orderBy('rm_type')->distinct()->pluck('rm_type');
+        $type = $types->contains($request->input('type')) ? $request->input('type') : null;
+        $sort = in_array($request->input('sort'), ['price_asc', 'price_desc'], true) ? $request->input('sort') : null;
+
+        $rooms = $bookable()->with('firstPhoto')
+            ->when($type, fn ($rooms) => $rooms->where('rm_type', $type))
+            ->when($sort, fn ($rooms) => $rooms->orderBy('rm_price_per_night', $sort === 'price_asc' ? 'asc' : 'desc'))
+            ->orderByRaw('LENGTH(rm_number), rm_number')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('guest.search-rooms', compact('rooms', 'types', 'type', 'sort', 'checkIn', 'checkOut', 'dateError'));
+    }
+
+    private function stayDates(Request $request): array
+    {
+        $today = today()->toDateString();
+        $tomorrow = today()->addDay()->toDateString();
+        $in = $request->input('check_in');
+        $out = $request->input('check_out');
+
+        if ($in === null && $out === null) {
+            return [$today, $tomorrow, null];
+        }
+
+        $valid = fn ($date) => is_string($date) && ($parsed = \DateTime::createFromFormat('!Y-m-d', $date)) && $parsed->format('Y-m-d') === $date;
+
+        $error = match (true) {
+            ! $valid($in) || ! $valid($out) => 'Choose a check in and a check out date.',
+            $in < $today => 'The check in date cannot be in the past.',
+            $out <= $in => 'The check out date must be after the check in date.',
+            Carbon::parse($in)->diffInDays(Carbon::parse($out)) > ReservationController::MAX_NIGHTS => 'A stay can be at most ' . ReservationController::MAX_NIGHTS . ' nights.',
+            default => null,
+        };
+
+        return $error ? [$today, $tomorrow, $error] : [$in, $out, null];
     }
     public function search(Request $request)
     {
-        $query = $request->input('query');
-
-        $rooms = Room::where('rm_number', 'like', '%' . $query . '%')
-            ->with('firstPhoto')
-            ->orWhere('rm_type', 'like', '%' . $query . '%')
-            ->latest()
-            ->get();
-
-        return view('staff.rooms.list', compact('rooms'));
+        return $this->index($request);
     }
 
 
@@ -67,9 +106,11 @@ class RoomController extends Controller
         $validatedData = $request->validate([
             'roomNumber' => 'required|string|max:13|unique:rooms,rm_number',
             'roomType' => 'required|string|max:255',
-            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
+            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:0,2',
             'status' => 'nullable|in:available,unavailable,maintenance',
-        ]);
+            'roomPhotos' => 'nullable|array',
+            'roomPhotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:4096',
+        ], [], self::ATTRIBUTES);
 
         // Remove dd($validatedData);
 
@@ -107,8 +148,7 @@ class RoomController extends Controller
         ]);
 
         foreach ($request->file('roomPhotos') as $photo) {
-            $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
-            $path = $photo->storeAs('room-photos', $filename, 'public');
+            $path = $photo->store('room-photos', 'public');
 
             DB::table('rooms_photos')->insert([
                 'room_id' => $room->id,
@@ -129,8 +169,7 @@ class RoomController extends Controller
         ]);
 
         $photo = $request->file('roomPhotos');
-        $filename = uniqid('room_') . '.' . $photo->getClientOriginalExtension();
-        $path = $photo->storeAs('room-photos', $filename, 'public');
+        $path = $photo->store('room-photos', 'public');
 
         DB::table('rooms_photos')->insert([
             'room_id' => $room->id,
@@ -147,14 +186,12 @@ class RoomController extends Controller
      */
     public function show(string $room_id)
     {
-        //
         $room = Room::where('id', $room_id)->firstOrFail();
 
-        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->get();
+        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->orderBy('id')->get();
         $room->images = $photos;
 
         $reservations = Reservation::where('room_id', $room_id)
-            ->where('status', 'confirmed')
             ->join('guests', 'reservations.guest_id', '=', 'guests.id')
             ->select('reservations.*', 'guests.full_name as guest_name', 'guests.email as guest_email')
             ->latest('reservations.created_at')
@@ -163,13 +200,14 @@ class RoomController extends Controller
     }
 
     // show the details of the room to reserve for the guest
-    public function reserveRoom(string $room_id)
+    public function reserveRoom(Request $request, string $room_id)
     {
-        //
         $room = Room::where('id', $room_id)->firstOrFail();
-        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->get();
-        $room->images = $photos;
-        return view('guest.room-details', compact('room', 'photos'));
+        $photos = DB::table('rooms_photos')->where('room_id', $room->id)->orderBy('id')->get();
+        [$checkIn, $checkOut, $dateError] = $this->stayDates($request);
+        $bookedForDates = $room->reservations()->overlapping($checkIn, $checkOut)->exists();
+
+        return view('guest.room-details', compact('room', 'photos', 'checkIn', 'checkOut', 'bookedForDates', 'dateError'));
     }
 
     /**
@@ -198,9 +236,11 @@ class RoomController extends Controller
         $validatedData = $request->validate([
             // 'roomNumber' => 'required|string|max:13|unique:rooms,rm_number,' . $room->rm_number,
             'roomType' => 'required|string|max:255',
-            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:2',
+            'roomPrice' => 'required|numeric|min:0|max:99999.99|decimal:0,2',
             'status' => 'nullable|in:available,unavailable,maintenance',
-        ]);
+            'roomPhotos' => 'nullable|array',
+            'roomPhotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:4096',
+        ], [], self::ATTRIBUTES);
 
         $room->update([
             // 'rm_number' => $validatedData['roomNumber'],
@@ -209,7 +249,11 @@ class RoomController extends Controller
             'status' => $validatedData['status'] ?? 'available',
         ]);
 
-        return redirect('/rooms')->with('success', 'Room is updated!');
+        if ($request->hasFile('roomPhotos')) {
+            $this->uploadPhoto($request, $room->id);
+        }
+
+        return redirect('/rooms/details/' . $room->id)->with('success', 'Room is updated!');
     }
 
     /**
@@ -224,12 +268,10 @@ class RoomController extends Controller
             return redirect('/rooms')->with('error', 'Room not found.');
         }
 
-        $room->delete();
+        $photoPaths = DB::table('rooms_photos')->where('room_id', $room->id)->pluck('photo_path')->all();
 
-        // deletets the uploaded files
-        // if (Storage::disk('public')->exists('room-covers/' . $room->thumbnail)) {
-        //     Storage::disk('public')->delete('room-covers/' . $room->thumbnail);
-        // }
+        $room->delete();
+        Storage::disk('public')->delete($photoPaths);
 
         return redirect('/rooms')->with('success', 'Room is removed!');
     }

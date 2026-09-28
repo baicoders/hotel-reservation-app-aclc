@@ -4,18 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\Guest;
 use App\Models\Reservation;
+use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $guests = Guest::latest()->take(50)->get();
-        return view('staff.guest.list', compact('guests'));
+        $query = is_string($request->input('query')) ? trim($request->input('query')) : '';
+
+        $guests = Guest::withCount('reservations')
+            ->when($query !== '', fn ($guests) => $guests->where(fn ($match) => $match
+                ->where('full_name', 'like', '%' . addcslashes($query, '\\%_') . '%')
+                ->orWhere('email', 'like', '%' . addcslashes($query, '\\%_') . '%')))
+            ->latest()
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('staff.guest.list', compact('guests', 'query'));
     }
 
     /**
@@ -39,16 +50,15 @@ class GuestController extends Controller
      */
     public function show(string $guest_id)
     {
-        //
         $guest = Guest::findOrFail($guest_id);
-        // show the list of reservations made by the guest
-        $bookings = Reservation::join('guests', 'reservations.guest_id', '=', 'guests.id')
-            ->join('rooms', 'reservations.room_id', '=', 'rooms.id')
+
+        $bookings = Reservation::join('rooms', 'reservations.room_id', '=', 'rooms.id')
             ->where('reservations.guest_id', $guest->id)
-            ->select('reservations.*', 'guests.*', 'rooms.*')
+            ->select('reservations.*', 'rooms.rm_number as room_number', 'rooms.rm_type as room_type', 'rooms.status as room_status')
+            ->latest('reservations.created_at')
+            ->latest('reservations.id')
             ->get();
-        //
-        // dd($bookings->toArray());
+
         return view('staff.guest.info', compact('guest', 'bookings'));
     }
 
@@ -73,14 +83,20 @@ class GuestController extends Controller
      */
     public function destroy(string $guest_id)
     {
-        //
-        // Delete all reservations associated with the guest
-        // Reservation::where('guest_id', $guest_id)->delete();
+        $guest = Guest::findOrFail($guest_id);
+        $active = ['checked_in'];
 
-        // Delete the guest record
-        Guest::destroy($guest_id);
+        DB::transaction(function () use ($guest, $active) {
+            $roomIds = Reservation::where('guest_id', $guest->id)->whereIn('status', $active)->pluck('room_id');
+            $stillHeld = Reservation::whereIn('room_id', $roomIds)
+                ->where('guest_id', '!=', $guest->id)
+                ->whereIn('status', $active)
+                ->pluck('room_id');
 
-        // Redirect back with a success message
+            Room::whereKey($roomIds->diff($stillHeld))->whereRaw('LOWER(status) = ?', ['unavailable'])->update(['status' => 'available']);
+            $guest->delete();
+        });
+
         return redirect('/guest')->with('success', 'Guest and related reservations deleted successfully.');
     }
 }

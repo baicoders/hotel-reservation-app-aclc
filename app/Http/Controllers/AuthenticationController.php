@@ -15,16 +15,20 @@ class AuthenticationController extends Controller
 
     public function loginUser(Request $request)
     {
-        $credentials = $request->only('username', 'password');
+        $credentials = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
         if (Auth::attempt(['name' => $credentials['username'], 'password' => $credentials['password']])) {
             $request->session()->regenerate();
+            $request->session()->forget('receipt');
             return redirect()->intended('dashboard');
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->withInput();
+            'username' => 'The provided credentials do not match our records.',
+        ])->onlyInput('username');
     }
 
     public function logout(Request $request)

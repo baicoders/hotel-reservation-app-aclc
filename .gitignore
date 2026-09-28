@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.unslopped/state.json
+.unslopped/cycles/
+.unslopped/history.jsonl
+.unslopped/logs/
+.unslopped/worktrees/
+.unslopped/proposals/
+.unslopped/graph.json
+.unslopped/graph.html
+.unslopped/GRAPH.md

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\RoomModel;
 use \Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class Room extends Model
 {
     /** @use HasFactory<\Database\Factories\RoomFactory> */
@@ -26,5 +27,10 @@ class Room extends Model
         return $this->hasOne(RoomModel::class, 'room_id')->oldest('id');
         // Alternatively, if you want the photo ordered by its own creation date:
         // return $this->hasOne(RoomPhoto::class, 'room_id')->oldest('created_at');
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
     }
 }
