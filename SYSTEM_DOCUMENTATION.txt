@@ -192,186 +192,179 @@ route and logout route are named.
 5. PUBLIC UI AND USER WORKFLOWS
 --------------------------------
 
-Shared layout:
-- resources/views/layout/app.blade.php is the base Blade layout.
-- It loads resources/css/app.css and resources/js/app.js through Vite.
-- Child pages supply content through the content section and optional inline
-  scripts through the scripts section.
-- Shared alert, error popup, and modal popup components are included after
-  page content.
-- The document title is "HRS".
+Shared layouts:
+- resources/views/layout/app.blade.php is the base layout. It loads
+  resources/css/app.css and resources/js/app.js through Vite and the Google
+  Fonts, sets the page title to "<page> | ACLC Hotel", includes the flash
+  messages (components/alert, which includes components/pop-error) and the
+  confirm dialog (components/modal-pop), then the page scripts section.
+- Every POST form disables its submit buttons once it submits and shows
+  "Saving..." or the form's data-busy-label, so a double click cannot submit
+  twice. The dialog locks the form when Confirm is pressed.
+- Pages that show errors under their fields declare an inline-errors section,
+  which hides the corner error summary.
+- resources/views/layout/guest.blade.php is the public page shell: a header
+  with Rooms and Staff sign in, the page title, and a footer. The header,
+  footer and receipt buttons are hidden when printing.
 
-Home page:
-- resources/views/home.blade.php uses a full-height hero with
-  public/aclc_building_img.jpg as a background image.
-- It displays the hotel reservation welcome message.
-- Two large navigation cards lead to "Reserve Room" and "Manage".
-- A description panel explains that rooms, guests, reservations, and payments
-  can be managed.
-- The footer displays the current year and the project attribution.
+Home page (home.blade.php):
+- Full height hero over public/aclc_building_img.jpg with the system title,
+  a short description, Reserve a room (to /search-room) and Manage (to
+  /dashboard), and a footer with the year, attribution and the version from
+  APP_VERSION when it is set.
 
-Room search:
-- resources/views/guest/search-rooms.blade.php displays room cards for public
-  visitors.
-- RoomController::listRooms limits results to 50, filters status to
-  "available", eager-loads the first photo, and sorts by newest creation date.
-- A room card can lead to the guest room details page.
+Room browser (guest/search-rooms.blade.php):
+- Check in and check out fields (today and tomorrow by default), a room type
+  filter offering only types that have free rooms, and a price sort.
+- Lists rooms free for the stay in pages of 12, with a count and the stay
+  summary. Bad dates show an error and fall back to tonight.
+- Each card (components/room-cards) shows the room number on the brass key
+  tag (components/key-tag), the type, the nightly price, an Available badge,
+  the first photo or a placeholder, View details and Reserve; both links
+  carry the dates.
 
-Guest room details:
-- resources/views/guest/room-details.blade.php displays selected room
-  information and its photo collection.
-- RoomController::reserveRoom loads the room and all rows from rooms_photos.
-- The page links to the reservation form with the selected room.
+Guest room details (guest/room-details.blade.php):
+- The room's number, type, nightly price and status, a gallery of every
+  photo with Previous and Next (components/room-gallery), and the chosen
+  dates.
+- Reserve this room opens the booking form with the dates. When the stay
+  overlaps an existing one the page says the room is already booked for
+  those dates; for a room in maintenance it says the room cannot be booked.
 
-Reservation form:
-- resources/views/guest/reserved-room-form.blade.php collects:
-  room_id, guest name, email, phone, address, amount, payment method, and
-  payment date.
-- The request is submitted to POST /guest/rooms/booking-room.
-- Validation errors are returned to the previous page with old input.
+Booking form (guest/reserved-room-form.blade.php):
+- Stay, guest details and payment sections beside a summary of the room,
+  nightly rate, nights and total.
+- The amount is read only: the server fills it with the total for the dates
+  and a script updates the nights, total and amount when the dates change.
+- Errors sit under their fields; every entered value is kept after an error.
+  Book and pay submits to POST /guest/rooms/booking-room; Cancel returns to
+  the room page with the dates.
 
-Booking result:
-- On a successful booking, resources/views/guest/receipt-page.blade.php is
-  rendered using the room, guest, and payment objects assembled by the
-  controller.
-- The receipt is rendered immediately; there is no separate receipt lookup
-  route.
-- The workflow assumes a one-night reservation: check-in is now() and
-  check-out is now()->addDays(1).
+Receipt (guest/receipt-page.blade.php):
+- Shown at GET /guest/receipt after the booking redirects there. It has the
+  confirmation number (reservation id as "#" and six digits), the stay, the
+  room, the guest details as typed, the payment and the total paid.
+- Print receipt and Save as PDF open the browser print window. Book another
+  room and Done clear the receipt. It also expires after 15 minutes and is
+  cleared when staff sign in on that browser.
 
-Additional guest templates:
-- guest/guest-form.blade.php and guest/payment-form.blade.php represent an
-  earlier multi-step booking design. The corresponding controller methods are
-  commented out and are not part of the active route flow.
+Login and errors:
+- authentication/login.blade.php shows the building beside a Username and
+  Password form with the error under the field.
+- errors/404.blade.php says the page was not found and links home and to
+  the room browser.
 
 
 6. STAFF UI LAYOUT AND FEATURES
 -------------------------------
 
-Staff shell:
-- resources/views/components/sidebar.blade.php provides the left navigation.
-- The sidebar is approximately 260px wide and contains links to Dashboard,
-  Reservations, Guests, Rooms, and either Logout or Login depending on auth
-  state.
-- Staff pages use a gray full-screen background with white rounded content
-  panels.
+Staff shell (layout/staff.blade.php and components/staff-nav.blade.php):
+- A lobby teal sidebar with Dashboard, Reservations, Guests and Rooms, the
+  current page marked with aria-current, the signed in user and Sign out.
+  Below the lg breakpoint it folds behind a Menu button.
+- Each page has a title, an optional eyebrow and page actions.
 
-Dashboard:
-- resources/views/staff/dashboard.blade.php uses a two-column, two-row grid.
-- It shows a "Latest Activities" panel plus counts and lists for the latest
-  reservations, guests, and rooms.
-- ManageController::dashboard retrieves five latest records from each model.
+Dashboard (staff/dashboard.blade.php):
+- Totals for rooms, rooms available now, open reservations (confirmed or
+  checked in) and guests.
+- Under Latest activity, with the time the page loaded and a Refresh link:
+  recent reservations, latest rooms, rooms not available, and new guests,
+  each with an empty state.
 
 Reservations:
-- staff/reservations/list.blade.php lists up to 50 recent reservations,
-  including guest name, room number/type, dates, and status.
-- staff/reservations/info.blade.php shows a single reservation together with
-  its guest, room, and first payment.
-- staff/reservations/edit.blade.php is present as a template, but the active
-  update flow is a status form submitted from the reservation detail/list UI.
-- Valid statuses are pending, confirmed, checked_in, checked_out, and
-  cancelled.
+- staff/reservations/list.blade.php: ID, room, guest, stay and status in
+  pages of 15, filtered by status, guest name or email, room number and a
+  date the guest is staying.
+- staff/reservations/info.blade.php: the stay, the guest and room with
+  links, the payment (or "No payment recorded"), and a status form whose
+  confirmation names the new status.
 
 Guests:
-- staff/guest/list.blade.php lists up to 50 latest guests.
-- staff/guest/info.blade.php shows guest data and reservations associated with
-  that guest.
-- staff/guest/edit.blade.php exists, but GuestController has no implemented
-  update route or update behavior.
-- Deleting a guest is exposed through a DELETE form/action.
+- staff/guest/list.blade.php: name, email, phone, address and date added in
+  pages of 20, a name or email search, and Open details and Delete per row.
+- staff/guest/info.blade.php: the profile, every reservation with both the
+  reservation and room status, Book a room, and Delete guest.
+- Delete confirmations state how many reservations go with the guest, that
+  their payments go too, and that rooms they are checked in to become
+  available.
 
 Rooms:
-- staff/rooms/list.blade.php lists up to 10 latest rooms and their first photo.
-- staff/rooms/info.blade.php shows room data, all photos, and confirmed
-  reservations with guest contact labels.
-- staff/rooms/create.blade.php collects room number, type, price, status, and
-  optional room photos.
-- staff/rooms/edit.blade.php edits room type, price, and status. Room number
-  is displayed/retained but is not currently updated by the controller.
-- staff/rooms/list.blade.php also uses the staff room search endpoint.
+- staff/rooms/list.blade.php: key tag cards in pages of 12 ordered by room
+  number, a number or type search and a status filter; each card offers
+  Details, Edit and Delete.
+- staff/rooms/info.blade.php: the gallery, the details, every reservation
+  with its status, Book this room (unless in maintenance), Edit room and
+  Delete room. The delete confirmation states the reservation count.
+- staff/rooms/create.blade.php and edit.blade.php share staff/rooms/form:
+  room number (read only when editing), type with suggestions, price, status
+  and photos with previews that can be removed before saving.
 
 Reusable Blade components:
-- components/sidebar.blade.php: staff navigation.
-- components/room-cards.blade.php: reusable room presentation.
-- components/title.blade.php: application title/branding.
-- components/alert.blade.php: success/flash alert presentation.
-- components/pop-error.blade.php: validation/error popup presentation.
-- components/modal-pop.blade.php: modal presentation.
-- errors/404.blade.php: not-found page.
+- key-tag, status-badge, room-cards, room-gallery, staff-nav, title,
+  alert, pop-error and modal-pop.
 
 
 7. CONTROLLERS AND CODE LOGIC
 -----------------------------
 
 AuthenticationController:
-- showLoginForm() returns the login view.
-- loginUser() reads username/password, maps username to users.name, calls
-  Auth::attempt(), regenerates the session on success, and redirects.
-- logout() logs out, invalidates the session, regenerates the CSRF token, and
-  redirects to login.
+- loginUser() validates username and password, maps the username to
+  users.name, regenerates the session and clears any guest receipt on
+  success, and returns the error on the username field on failure.
+- logout() logs out, invalidates the session, regenerates the CSRF token and
+  redirects to /login.
 
 ManageController:
-- dashboard() fetches five latest Reservation, Guest, and Room records and
-  passes them to staff.dashboard.
+- dashboard() counts rooms, available rooms, open reservations and guests,
+  and loads the latest reservations (joined to guests and rooms), guests,
+  rooms, and rooms that are not available.
 
 RoomController:
-- index(): fetches up to 10 rooms with firstPhoto and newest-first ordering.
-- listRooms(): fetches up to 50 available rooms for public browsing.
-- search(): applies a partial-match query to rm_number or rm_type and returns
-  the staff room list.
-- create(): returns the room creation form.
-- store(): validates roomNumber, roomType, roomPrice, and optional status;
-  creates a Room; then processes one or multiple uploaded roomPhotos.
-- uploadPhoto(): validates an array of image files, stores each file on the
-  public disk under room-photos, and inserts rooms_photos rows.
-- uploadSinglePhoto(): validates one image and inserts its metadata. The
-  current implementation validates roomPhotos but reads the uploaded file
-  using the key "photo"; callers should keep this mismatch in mind.
-- show(): loads a room, all photos, and confirmed reservations joined to guest
-  names/emails for the staff detail page.
-- reserveRoom(): loads a room and its photos for the public detail page.
-- edit(): loads a room for editing.
-- update(): validates type, price, and status, then updates those fields.
-- destroy(): deletes the room record. The rooms_photos foreign key is defined
-  with cascading delete, but uploaded physical files are not deleted here.
+- index() and search(): the staff list with the grouped number or type
+  search (LIKE wildcards escaped), the status filter and pagination.
+- listRooms(): the public browser. stayDates() validates the query dates;
+  rooms not in maintenance with no overlapping stay are listed.
+- store() and update(): validate the room fields and photos together, then
+  save the room and store photos through uploadPhoto().
+- show(): the room, its photos and every reservation for the staff page.
+- reserveRoom(): the public room page, with an overlap check for the dates.
+- destroy(): deletes the room row, then its photo files.
 
 GuestController:
-- index(): lists the 50 latest guests.
-- show(): loads one guest and joins reservations to rooms to build the
-  guest's booking history.
-- destroy(): deletes the guest and redirects with a success message.
-- create(), store(), edit(), and update() are placeholders with no active
-  behavior.
+- index(): paginated guests with their reservation counts and search.
+- show(): the guest and their reservations joined to rooms, with aliased
+  room columns so reservation ids and statuses stay correct.
+- destroy(): in one transaction, frees rooms the guest is checked in to
+  (unless another guest is checked in or the room is in maintenance), then
+  deletes the guest; reservations and payments cascade.
+- create(), store(), edit(), and update() are placeholders.
 
 ReservationController:
-- index(): joins reservations, guests, and rooms to produce a staff list of
-  up to 50 recent reservations.
-- reserveRoomForm(): optionally loads a room from request.room_id and returns
-  the public booking form.
-- reserveRoom(): validates guest/payment data; verifies the supplied amount is
-  not less than the nightly room price; reuses a guest with the same email or
-  creates one; marks the room unavailable; creates a confirmed reservation;
-  creates a payment; and renders the receipt view.
-- show(): loads reservation, guest, room, and first payment for staff detail.
-- update(): validates the status against the allowed status list. checked_in
-  updates check_in_date; checked_out updates check_out_date; all other
-  statuses only update status.
+- index(): the staff list with the status, guest, room and date filters.
+- reserveRoomForm(): requires a single room_id, refuses rooms in
+  maintenance, and computes the nights and total from the kept input or the
+  query dates.
+- reserveRoom(): validates the booking, checks the total, and in one
+  transaction locks the room, rejects overlaps, reuses or creates the guest,
+  and creates the confirmed reservation and the paid payment. It stores the
+  receipt in the session and redirects to /guest/receipt.
+- receipt() and clearReceipt(): show or clear that session receipt.
+- show(): the reservation with its guest, room and first payment.
+- update(): changes the status, the stay dates and the room status in one
+  transaction (section 9).
 - create(), store(), edit(), and destroy() are placeholders.
 
-Model and relationship logic:
-- Room is mass assignable for room number, type, nightly price, and status.
-  firstPhoto() defines a has-one relation to RoomModel ordered by oldest id.
-- RoomModel represents the rooms_photos table and is mass assignable for
-  room_id and photo_path.
-- Guest is mass assignable for full name, email, phone number, and address.
-- Reservation is mass assignable for room_id, guest_id, check-in/check-out
-  dates, and status.
-- Payment is mass assignable for reservation_id, amount, payment date,
-  payment method, and status.
-- User is Laravel's Authenticatable model. Passwords are cast as hashed;
-  password and remember token are hidden.
-- Most cross-entity reads are implemented with explicit joins in controllers,
-  rather than Eloquent relationship methods on Reservation, Guest, or Payment.
+Model logic:
+- Room: mass assignable number, type, nightly price and status; firstPhoto()
+  and reservations() relations.
+- RoomModel: the rooms_photos table (room_id, photo_path).
+- Guest: mass assignable full name, email, phone number and address;
+  reservations() relation.
+- Reservation: mass assignable room_id, guest_id, dates and status; the
+  overlapping() scope.
+- Payment: mass assignable reservation_id, amount, payment date, method and
+  status.
+- User: Laravel's Authenticatable model with hashed passwords.
 
 
 8. DATABASE SCHEMA
