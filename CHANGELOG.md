@@ -25,6 +25,9 @@
 - The guest list shows name, email, phone, address and date added, with a name or email search, pages of 20, and Open details and Delete on each row.
 - The guest page shows the profile, every reservation with its room and both statuses, and a Delete guest action that states the reservation count.
 
+### Documentation
+- SYSTEM_DOCUMENTATION.txt sections 1 to 4 and 8 to 14 describe the rebuilt app: routes, booking and status rules, tests, open limitations and the Docker startup.
+
 ### Removed
 - The unused guest details and payment templates of the old multi step booking flow, its commented out controller methods, and two empty staff edit templates.
 
