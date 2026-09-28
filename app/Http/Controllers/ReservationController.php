@@ -67,10 +67,15 @@ class ReservationController extends Controller
         }
 
         $date = fn ($value) => is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ? $value : null;
-        $checkIn = $date($request->query('check_in'));
-        $checkOut = $date($request->query('check_out'));
+        $checkIn = $date($request->old('check_in_date', $request->query('check_in')));
+        $checkOut = $date($request->old('check_out_date', $request->query('check_out')));
+        if (! $checkIn || ! $checkOut || $checkOut <= $checkIn) {
+            [$checkIn, $checkOut] = [today()->toDateString(), today()->addDay()->toDateString()];
+        }
+        $nights = (int) Carbon::parse($checkIn)->diffInDays(Carbon::parse($checkOut));
+        $total = round($room->rm_price_per_night * $nights, 2);
 
-        return view('guest.reserved-room-form', compact('room', 'checkIn', 'checkOut'));
+        return view('guest.reserved-room-form', compact('room', 'checkIn', 'checkOut', 'nights', 'total'));
     }
 
     public function reserveRoom(Request $request)
